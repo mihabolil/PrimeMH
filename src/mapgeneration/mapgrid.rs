@@ -1,0 +1,167 @@
+use serde::Serialize;
+use std::ops::Sub;
+
+use super::{jsondata::LevelData};
+
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+pub struct Pos(pub i16, pub i16);
+
+#[derive(Clone, Debug)]
+pub struct MapGrid {
+    pub tiles: Vec<Vec<bool>>,
+    pub width: i16,
+    pub height: i16,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd)]
+pub struct Successor {
+    pub pos: Pos,
+    pub cost: u32,
+}
+
+#[allow(dead_code)]
+impl MapGrid {
+    pub fn get_successors(&self, position: &Pos) -> Vec<Successor> {
+        let mut successors = Vec::new();
+        for dx in -1i16..=1 {
+            for dy in -1i16..=1 {
+                if dx == 0 && dy == 0 {
+                    continue;
+                }
+                let new_position = Pos(position.0 + dx, position.1 + dy);
+                if new_position.0 < 0
+                    || new_position.0 >= self.width
+                    || new_position.1 < 0
+                    || new_position.1 >= self.height
+                {
+                    continue;
+                }
+                let board_value = self.tiles[new_position.1 as usize][new_position.0 as usize];
+                if board_value {
+                    successors.push(Successor {
+                        pos: new_position,
+                        cost: board_value as u32,
+                    });
+                }
+            }
+        }
+        successors
+    }
+}
+
+pub fn level_data_to_walkable(level_data: &LevelData) -> MapGrid {
+    let lvl_width = level_data.size.width as usize;
+    let lvl_height = level_data.size.height as usize;
+
+    let mut map_grid: Vec<Vec<bool>> = vec![vec![false; lvl_width]; lvl_height];
+
+    for (y, map_rows) in level_data.map.iter().enumerate() {
+        // each row
+        let mut fill: bool = false;
+        let mut x: usize = 0;
+
+        let last_idx = map_rows.len().wrapping_sub(1);
+
+        for (index, map_row) in map_rows.iter().enumerate() {
+            fill = !fill;
+            let width = *map_row as usize;
+            if !fill {
+                for num in 0..width {
+                    map_grid[y][num + x] = true;
+                }
+            }
+            x += width;
+
+            if index == last_idx && fill {
+                // fix end of row
+                let extra_width = lvl_width.wrapping_sub(x).wrapping_sub(1);
+                for num in 0..extra_width {
+                    map_grid[y][num + x] = true;
+                }
+            }
+        }
+    }
+    MapGrid {
+        tiles: map_grid,
+        width: lvl_width as i16,
+        height: lvl_height as i16,
+    }
+}
+
+pub fn level_data_to_edges(map_grid: &MapGrid) -> MapGrid {
+    let lvl_width = map_grid.width as usize;
+    let lvl_height = map_grid.height as usize;
+
+    let mut edge_map_grid: Vec<Vec<bool>> = vec![vec![false; lvl_width]; lvl_height];
+
+    for (row, row_vec) in map_grid.tiles.iter().enumerate() {
+        for (col, cell) in row_vec.iter().enumerate() {
+            if cell == &false {
+                let border = check_surrounding_pixels(&map_grid.tiles, row, col, lvl_width, lvl_height);
+                if border {
+                    edge_map_grid[row][col] = true;
+                }
+            } else if (col == 0 || row == 0) || (col == lvl_width.sub(1) || row == lvl_height.sub(1)) {
+                edge_map_grid[row][col] = true;
+            }
+        }
+    }
+    MapGrid {
+        tiles: edge_map_grid,
+        width: lvl_width as i16,
+        height: lvl_height as i16,
+    }
+}
+
+fn check_surrounding_pixels(map_grid: &[Vec<bool>], irow: usize, icol: usize, width: usize, height: usize) -> bool {
+    // above row
+    if irow > 0 {
+        if icol > 0 && map_grid[irow - 1][icol - 1] {
+            return true;
+        }
+        if map_grid[irow - 1][icol] {
+            return true;
+        }
+        if icol < width.wrapping_sub(1) && map_grid[irow - 1][icol + 1] {
+            return true;
+        }
+    }
+    //same row
+    if icol > 0 && map_grid[irow][icol - 1] {
+        return true;
+    }
+    if icol < width.wrapping_sub(1) && map_grid[irow][icol + 1] {
+        return true;
+    }
+
+    // row beneath
+    if irow < height.wrapping_sub(1) {
+        if icol > 0 && map_grid[irow + 1][icol - 1] {
+            return true;
+        }
+        if map_grid[irow][icol] {
+            return true;
+        }
+        if icol < width.wrapping_sub(1) && map_grid[irow + 1][icol + 1] {
+            return true;
+        }
+    }
+
+    false
+}
+
+#[allow(dead_code)]
+pub fn print_map_grid(map_grid: &[Vec<i32>]) {
+    // output text
+    for row in map_grid.iter() {
+        let mut row_str = String::new();
+        for cell in row.iter() {
+            if cell == &0 {
+                row_str.push(' ')
+            } else {
+                row_str.push('X')
+            }
+        }
+        println!("{}", row_str);
+    }
+}

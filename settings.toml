@@ -1,0 +1,85 @@
+[general]
+debug = true
+d2lodpath = "E:/Dev/d2-mapgenerator/game"
+blacha_exe = "bin/d2-mapgen.exe"
+render_scale = 1.0
+fps_limit = 60
+title = "Diablo II: Resurrected"
+map_position = "Center"
+
+[visual]
+scale = 4.2
+map_opacity = 0.65
+always_show_map = true
+hide_map_menus_open = false
+
+[item_log]
+enabled = true
+text_size = 16.1
+text_duration = 30
+ground_alerts = true
+ground_alerts_text_size = 4.5
+ground_alerts_show_suffix_prefix = true
+voice_enabled = true
+voice_volume = 80
+voice_speed = 2
+
+[missiles]
+enabled = true
+fire_size = 3.0
+fire_color = [255, 0, 0, 127]
+cold_size = 3.0
+cold_color = [0, 208, 255, 127]
+poison_size = 3.0
+poison_color = [50, 205, 50, 127]
+lightning_size = 3.0
+lightning_color = [255, 255, 0, 70]
+physical_size = 3.0
+physical_color = [205, 133, 63, 127]
+magic_size = 3.0
+magic_color = [255, 136, 0, 127]
+
+[chests]
+enabled = true
+size = 0.1
+
+[portals]
+enabled = true
+size = 2.0
+
+[shrines]
+enabled = true
+size = 0.1
+text_size = 5.0
+
+[lines]
+waypoint_enabled = false
+waypoint_path_enabled = false
+waypoint_rgba = [255, 255, 0, 127]
+exit_enabled = true
+exit_path_enabled = false
+exit_rgba = [255, 0, 255, 127]
+quest_enabled = false
+quest_path_enabled = true
+quest_rgba = [0, 255, 0, 127]
+boss_enabled = true
+boss_path_enabled = false
+boss_rgba = [255, 0, 0, 127]
+
+[monsters]
+immunities = true
+normal_mobs = true
+normal_mobs_size = 1.5
+normal_mob_color = [255, 255, 255, 255]
+minions_mobs = true
+minions_mobs_size = 1.5
+minions_mob_color = [255, 255, 255, 255]
+champions_mobs = true
+champions_mobs_size = 3.0
+champions_mob_color = [96, 92, 216, 255]
+unique_mobs = true
+unique_mobs_size = 3.0
+unique_mob_color = [212, 175, 55, 255]
+boss_mobs = true
+boss_mobs_size = 3.0
+boss_mob_color = [255, 0, 0, 255]

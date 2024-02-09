@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'd2r-jbmh'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=d2r-jbmh",
+                    "--package=d2r-jbmh"
+                ],
+                "filter": {
+                    "name": "d2r-jbmh",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

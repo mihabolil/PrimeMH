@@ -1,0 +1,172 @@
+use config::{Config, ConfigError, File};
+use serde::{Deserialize, Serialize};
+use std::{env, fs, path::PathBuf};
+
+use crate::SETTINGS_FILE;
+
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(unused)]
+pub struct ItemToolTip {
+    pub enabled: bool,
+    pub text_size: f32,
+}
+
+
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(unused)]
+pub struct Lines {
+    pub waypoint_enabled: bool,
+    pub waypoint_path_enabled: bool,
+    pub waypoint_rgba: [u8; 4],
+    pub exit_enabled: bool,
+    pub exit_path_enabled: bool,
+    pub exit_rgba: [u8; 4],
+    pub quest_enabled: bool,
+    pub quest_path_enabled: bool,
+    pub quest_rgba: [u8; 4],
+    pub boss_enabled: bool,
+    pub boss_path_enabled: bool,
+    pub boss_rgba: [u8; 4],
+}
+
+impl Default for Lines {
+    fn default() -> Self {
+        Lines {
+            waypoint_enabled: true,
+            waypoint_path_enabled: true,
+            waypoint_rgba: [255, 255, 0, 127],
+            exit_enabled: true,
+            exit_path_enabled: true,
+            exit_rgba: [255, 0, 255, 127],
+            quest_enabled: true,
+            quest_path_enabled: true,
+            quest_rgba: [0, 255, 0, 127],
+            boss_enabled: true,
+            boss_path_enabled: true,
+            boss_rgba: [255, 0, 0, 127],
+        }
+    }
+}
+
+
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(unused)]
+pub struct Visual {
+    pub scale: f32,
+    pub map_opacity: f32,
+    pub always_show_map: bool,
+    pub hide_map_menus_open: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(unused)]
+pub struct Missiles {
+    pub enabled: bool,
+    pub fire_size: f32,
+    pub fire_color: [u8; 4],
+    pub cold_size: f32,
+    pub cold_color: [u8; 4],
+    pub poison_size: f32,
+    pub poison_color: [u8; 4],
+    pub lightning_size: f32,
+    pub lightning_color: [u8; 4],
+    pub physical_size: f32,
+    pub physical_color: [u8; 4],
+    pub magic_size: f32,
+    pub magic_color: [u8; 4],
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(unused)]
+pub struct Chests {
+    pub enabled: bool,
+    pub size: f32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(unused)]
+pub struct Portals {
+    pub enabled: bool,
+    pub size: f32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(unused)]
+pub struct Shrines {
+    pub enabled: bool,
+    pub size: f32,
+    pub text_size: f32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(unused)]
+pub struct Monsters {
+    pub immunities: bool,
+    pub normal_mobs: bool,
+    pub normal_mobs_size: f32,
+    pub normal_mob_color: [u8; 4],
+    pub minions_mobs: bool,
+    pub minions_mobs_size: f32,
+    pub minions_mob_color: [u8; 4],
+    pub champions_mobs: bool,
+    pub champions_mobs_size: f32,
+    pub champions_mob_color: [u8; 4],
+    pub unique_mobs: bool,
+    pub unique_mobs_size: f32,
+    pub unique_mob_color: [u8; 4],
+    pub boss_mobs: bool,
+    pub boss_mobs_size: f32,
+    pub boss_mob_color: [u8; 4],
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(unused)]
+pub struct General {
+    pub debug: bool,
+    pub d2lodpath: PathBuf,
+    pub blacha_exe: PathBuf,
+    pub render_scale: f32,
+    pub fps_limit: u8,
+    pub title: String,
+    pub map_position: MapPosition,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(unused)]
+pub struct Settings {
+    pub general: General,
+    pub visual: Visual,
+    pub missiles: Missiles,
+    pub chests: Chests,
+    pub portals: Portals,
+    pub shrines: Shrines,
+    pub lines: Lines,
+    pub monsters: Monsters,
+}
+
+impl Settings {
+    pub fn new() -> Result<Self, ConfigError> {
+        let mut path = env::current_dir().unwrap();
+        path.push(SETTINGS_FILE);
+
+        let s = Config::builder().add_source(File::with_name(SETTINGS_FILE)).build()?;
+        s.try_deserialize()
+    }
+
+    pub fn save(&self) {
+        let mut path = env::current_dir().unwrap();
+        // path.push("src");
+        path.push(SETTINGS_FILE);
+
+        let toml_string = toml::to_string(&self).expect("Could not encode settings.toml file!");
+        fs::write(path, toml_string).expect("Could not write to settings.toml file!");
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Default, Eq, PartialEq)]
+pub enum MapPosition {
+    #[default]
+    Center,
+    TopLeft,
+    TopRight,
+}
