@@ -1,3 +1,4 @@
+use msgbox::IconType;
 use notan::egui::{self, *};
 use notan::math::{Mat3, Vec2};
 use notan::prelude::*;
@@ -11,9 +12,11 @@ use winapi::um::winuser::{
 };
 
 use crate::gui::draw_map::draw_map;
+use crate::mapgeneration::blacha::is_blacha_ok;
 use crate::memory::gamedata;
 use crate::memory::process::D2RWindowArea;
 use crate::settings::MapPosition;
+use crate::types::seedvalues::{Difficulty, SeedValues};
 use crate::{
     mapgeneration::{self, jsondata::SeedData},
     memory::{gamedata::GameData, process::D2RInstance},
@@ -57,6 +60,22 @@ pub fn start_ui() -> Result<(), String> {
         .build()
 }
 
+
+fn checkd2lod(settings: &Settings) {
+    if settings.general.d2lodpath.exists() {
+        log::info!("Using D2LoD path {}", settings.general.d2lodpath.as_os_str().to_string_lossy());
+
+        let seedvalues = SeedValues { map_seed: 256, difficulty: Difficulty::Normal, level: 1, dw_init_seed_hash: 5 };
+
+        let seed_data = mapgeneration::seeddata::generate_seed_data(&seedvalues, &settings);
+        
+    } else {
+        log::error!("D2LoD path doesn't exist, checking your settings.toml - {}", settings.general.d2lodpath.as_os_str().to_string_lossy());
+    }
+
+    
+}
+
 fn init(gfx: &mut Graphics) -> State {
     // load config
     let settings: Settings = match Settings::new() {
@@ -67,6 +86,16 @@ fn init(gfx: &mut Graphics) -> State {
         }
     };
 
+    let blacha_result = is_blacha_ok(&settings);
+    match blacha_result {
+        Ok(_) => {},
+        Err(log_text) => {
+            log::error!("Error with generating map data from D2LoD\nCheck your D2LoD settings\nBlacha tool returned:\n{}", log_text);
+            panic!("{} {}", "Failed to generate map data!\n", log_text);
+        },
+    }
+    
+    
     let images = images::load_images(gfx);
 
     let d2rprocess = D2RInstance::open_title(settings.general.title.clone());

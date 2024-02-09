@@ -3,6 +3,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use crate::settings::Settings;
+
 use super::cache;
 use super::jsondata::SeedData;
 use super::seeddata::SeedRequest;
@@ -26,6 +28,33 @@ pub fn get_seed_data(seed_request: SeedRequest) -> SeedData {
         Err(e) => {
             delete_cached_file(&cached_seed_data_file);
             panic!("{} {}", "Failed to generate map data!", e);
+        }
+    }
+}
+
+pub fn is_blacha_ok(settings: &Settings) -> Result<bool, String> {
+
+    let seed_request = SeedRequest {
+        map_seed: 123,
+        difficulty: 2,
+        d2lodpath: settings.general.d2lodpath.clone(),
+        blacha_exe: settings.general.blacha_exe.clone(),
+    };
+    
+    log::info!(
+        "Generating fresh data for seed {} and difficulty {} d2lod: {} blacha: {}",
+        seed_request.map_seed,
+        seed_request.difficulty,
+        seed_request.d2lodpath.to_string_lossy(),
+        seed_request.blacha_exe.to_string_lossy()
+    );
+    let seed_data_str = generate_data(seed_request);
+
+    let json: Result<SeedData, Error> = serde_json::from_str(&seed_data_str);
+    match json {
+        Ok(_) => Ok(true),
+        Err(_) => {
+            Err(seed_data_str)
         }
     }
 }

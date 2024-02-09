@@ -22,7 +22,7 @@ pub fn configure_logging() {
 
             if record.level() == log::Level::Error {
                 let msg = format!("{}", &record.args());
-                msgbox::create("D2R Rusty Reveal", &msg, IconType::Error).unwrap();
+                msgbox::create("D2R JBMH", &msg, IconType::Error).unwrap();
             };
 
             path_style.set_color(Color::Rgb(128, 128, 128));

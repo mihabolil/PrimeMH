@@ -1,4 +1,4 @@
-mod blacha;
+pub mod blacha;
 mod cache;
 pub mod jsondata;
 pub mod mapgrid;
