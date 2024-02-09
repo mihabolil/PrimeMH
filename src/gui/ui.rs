@@ -1,4 +1,3 @@
-use msgbox::IconType;
 use notan::egui::{self, *};
 use notan::math::{Mat3, Vec2};
 use notan::prelude::*;
@@ -16,7 +15,6 @@ use crate::mapgeneration::blacha::is_blacha_ok;
 use crate::memory::gamedata;
 use crate::memory::process::D2RWindowArea;
 use crate::settings::MapPosition;
-use crate::types::seedvalues::{Difficulty, SeedValues};
 use crate::{
     mapgeneration::{self, jsondata::SeedData},
     memory::{gamedata::GameData, process::D2RInstance},
@@ -60,21 +58,6 @@ pub fn start_ui() -> Result<(), String> {
         .build()
 }
 
-
-fn checkd2lod(settings: &Settings) {
-    if settings.general.d2lodpath.exists() {
-        log::info!("Using D2LoD path {}", settings.general.d2lodpath.as_os_str().to_string_lossy());
-
-        let seedvalues = SeedValues { map_seed: 256, difficulty: Difficulty::Normal, level: 1, dw_init_seed_hash: 5 };
-
-        let seed_data = mapgeneration::seeddata::generate_seed_data(&seedvalues, &settings);
-        
-    } else {
-        log::error!("D2LoD path doesn't exist, checking your settings.toml - {}", settings.general.d2lodpath.as_os_str().to_string_lossy());
-    }
-
-    
-}
 
 fn init(gfx: &mut Graphics) -> State {
     // load config
@@ -647,20 +630,15 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
             }
         });
         ui.separator();
+        ui.hyperlink("https://discord.gg/GDjJPsX2");
 
         let splash_text = format!(
             "{}",
             concat!(
                 "If you paid for this you have been scammed\n",
                 "如果您為此付出了，您已經被騙了\n",
-                "Wenn Sie dafür bezahlt haben, wurden Sie betrogen\n",
-                "Si pagaste por esto, has sido estafado\n",
-                "Si vous avez payé pour cela, vous avez été arnaque\n",
-                "Se hai pagato per questo sei stato truffato\n",
                 "당신이 이것을 지불했다면 당신은 사기를당했습니다\n",
-                "Jeśli za to zapłaciłeś, zostałeś oszukany\n",
                 "あなたがこれに対して支払った場合、あなたは詐欺されています\n",
-                "Se você pagou por isso, foi enganado\n",
                 "Если вы заплатили за это, вас обманули\n"
             )
         );

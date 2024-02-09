@@ -1,3 +1,4 @@
+use msgbox::IconType;
 use serde_json::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -40,6 +41,19 @@ pub fn is_blacha_ok(settings: &Settings) -> Result<bool, String> {
         d2lodpath: settings.general.d2lodpath.clone(),
         blacha_exe: settings.general.blacha_exe.clone(),
     };
+
+    
+    
+    if !seed_request.d2lodpath.exists() {
+        let msg = format!("Could not find d2lodpath {:?}, make sure you downloaded the d2lod zip as specified in the readme", &seed_request.d2lodpath);
+        msgbox::create("D2R JBMH", &msg, IconType::Error).unwrap();
+        panic!("Could not find d2lodpath, check settings.toml");
+    }
+    if !seed_request.blacha_exe.exists() {
+        let msg = format!("Could not find blacha_exe {:?}, check your paths, check settings.toml", &seed_request.blacha_exe);
+        msgbox::create("D2R JBMH", &msg, IconType::Error).unwrap();
+        panic!("Could not find blacha_exe, check settings.toml");
+    }
     
     log::info!(
         "Generating fresh data for seed {} and difficulty {} d2lod: {} blacha: {}",
@@ -54,7 +68,9 @@ pub fn is_blacha_ok(settings: &Settings) -> Result<bool, String> {
     match json {
         Ok(_) => Ok(true),
         Err(_) => {
-            Err(seed_data_str)
+            let msg = format!("{}\n{}", "Error generating map data", &seed_data_str);
+            msgbox::create("D2R JBMH", &msg, IconType::Error).unwrap();
+            panic!("Error generating map data");
         }
     }
 }
@@ -64,9 +80,10 @@ fn delete_cached_file(cached_seed_data_file: &PathBuf) {
 }
 
 fn generate_data(seed_request: SeedRequest) -> String {
+    let d2log_absolute_path = seed_request.d2lodpath.canonicalize().expect("Failed to get absolute path for d2lodpath");
     // generate data
     let output = Command::new(seed_request.blacha_exe)
-        .arg(seed_request.d2lodpath)
+        .arg(d2log_absolute_path)
         .arg("--seed")
         .arg(seed_request.map_seed.to_string())
         .arg("--difficulty")

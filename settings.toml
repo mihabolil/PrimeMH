@@ -1,6 +1,6 @@
 [general]
 debug = true
-d2lodpath = "E:/Dev/d2-mapgenerator/game"
+d2lodpath = "bin/d2lod"
 blacha_exe = "bin/d2-mapgen.exe"
 render_scale = 1.0
 fps_limit = 60
@@ -8,21 +8,10 @@ title = "Diablo II: Resurrected"
 map_position = "Center"
 
 [visual]
-scale = 4.2
+scale = 3.3
 map_opacity = 0.65
 always_show_map = true
-hide_map_menus_open = false
-
-[item_log]
-enabled = true
-text_size = 16.1
-text_duration = 30
-ground_alerts = true
-ground_alerts_text_size = 4.5
-ground_alerts_show_suffix_prefix = true
-voice_enabled = true
-voice_volume = 80
-voice_speed = 2
+hide_map_menus_open = true
 
 [missiles]
 enabled = true
