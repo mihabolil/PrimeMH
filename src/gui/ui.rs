@@ -46,6 +46,7 @@ pub fn start_ui() -> Result<(), String> {
         .multisampling(16)
         .window_icon(Some("primemh.png".into()))
         .taskbar_icon(Some("primemh.png".into()))
+        .title("PrimeMH")
         .vsync(true);
 
     notan::init_with(init)
@@ -224,9 +225,9 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
         draw.mask(Some(&mask));
         let elapsed_time = SystemTime::now()
             .duration_since(state.launch_time)
-            .expect("Time went backwards!");
+            .expect("Fuck you!");
         if elapsed_time <= Duration::from_secs(10) {
-            let splash_text = format!("Joffrey Besos Map Hack (PrimeMH)");
+            let splash_text = format!("Joffreybesos' Map overlay (PrimeMH)");
             draw.text(&state.blizzard_font, &splash_text)
                 .position(app.window().width() as f32 * 0.5, app.window().height() as f32 * 0.1)
                 .size(52.0)
@@ -349,29 +350,34 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
             }
         }
 
-        
-        let font_size = 12.0;
-        let warning_text: String = format!("Joffrey Besos Map hack");
-        draw.text(&state.blizzard_font, &warning_text)
-            .position(app.window().width() as f32 - 5.0, 5.0)
-            .size(font_size)
-            .color(Color::from_hex(0xC6B276AA))
-            .h_align_right()
-            .v_align_top();
+        let warning_duration = elapsed_time.as_secs() % 300;
+        if warning_duration < 20 && elapsed_time >= Duration::from_secs(60) {
+            let font_size = 12.0;
+            let warning_text: String = format!("This is a free tool");
+            let warning_text2: String = format!("如果您為此付出了，您已經被騙");
+            let warning_text3: String = format!("당신이 이것을 지불했다면 당신은 사기를당했습니다");
+            
+            draw.text(&state.blizzard_font, &warning_text)
+                .position(app.window().width() as f32 - 5.0, 5.0)
+                .size(font_size)
+                .color(Color::from_hex(0xC6B276AA))
+                .h_align_right()
+                .v_align_top();
 
-        draw.text(&state.blizzard_font, &warning_text)
-            .position(app.window().width() as f32 - 5.0, app.window().height() as f32)
-            .size(font_size)
-            .color(Color::from_hex(0xC6B276AA))
-            .h_align_right()
-            .v_align_bottom();
-        
-        draw.text(&state.blizzard_font, &warning_text)
-            .position(5.0, app.window().height() as f32)
-            .size(font_size)
-            .color(Color::from_hex(0xC6B276AA))
-            .h_align_left()
-            .v_align_bottom();
+            draw.text(&state.blizzard_font, &warning_text2)
+                .position(app.window().width() as f32 - 5.0, app.window().height() as f32)
+                .size(font_size)
+                .color(Color::from_hex(0xC6B276AA))
+                .h_align_right()
+                .v_align_bottom();
+            
+            draw.text(&state.blizzard_font, &warning_text3)
+                .position(5.0, app.window().height() as f32)
+                .size(font_size)
+                .color(Color::from_hex(0xC6B276AA))
+                .h_align_left()
+                .v_align_bottom();
+        }
 
         gfx.render(&output);
         gfx.render(&draw);
