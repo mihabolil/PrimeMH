@@ -2,9 +2,9 @@ use notan::egui::{self, *};
 use notan::math::{Mat3, Vec2};
 use notan::prelude::*;
 use notan::{draw::*, extra};
-use std::fs::File;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
+use std::fs::File;
 use std::io::Read;
 use toml::Value as TomlValue;
 
@@ -48,11 +48,12 @@ pub fn start_ui() -> Result<(), String> {
         .decorations(false)
         .mouse_passthrough(true)
         .transparent(true)
-        .multisampling(16)
+        .multisampling(settings.general.multisampling)
         .window_icon(Some("primemh.png".into()))
         .taskbar_icon(Some("primemh.png".into()))
         .title("PrimeMH")
-        .vsync(true);
+        .high_dpi(settings.general.high_dpi)
+        .vsync(settings.general.vsync);
 
     notan::init_with(init)
         .add_config(win_config)
