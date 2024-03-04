@@ -6,6 +6,9 @@ render_scale = 1.0
 fps_limit = 60
 title = "Diablo II: Resurrected"
 map_position = "Center"
+multisampling = 8
+vsync = true
+high_dpi = true
 
 [visual]
 scale = 3.3

@@ -7,6 +7,10 @@ use msgbox::IconType;
 pub fn configure_logging() {
     let target = Box::new(File::create("primemh.log").expect("Can't create bot agent log file"));
 
+    std::panic::set_hook(Box::new(|panic_info| {
+        log::error!("PANIC: {}", panic_info);
+    }));
+
     Builder::new()
         .format(|buf, record| {
             

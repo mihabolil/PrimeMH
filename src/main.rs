@@ -30,6 +30,7 @@ fn main() {
     let icon = include_bytes!("./gui/images/primemh.png");
     let mut f = File::create("primemh.png").unwrap();
     f.write_all(icon.as_slice()).unwrap();
+    log::info!("Added Icon");
     log::info!("Starting UI...");
     start_ui().unwrap();
 }

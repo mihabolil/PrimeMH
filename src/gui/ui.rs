@@ -43,11 +43,12 @@ pub fn start_ui() -> Result<(), String> {
         .decorations(false)
         .mouse_passthrough(true)
         .transparent(true)
-        .multisampling(16)
+        .multisampling(settings.general.multisampling)
         .window_icon(Some("primemh.png".into()))
         .taskbar_icon(Some("primemh.png".into()))
         .title("PrimeMH")
-        .vsync(true);
+        .high_dpi(settings.general.high_dpi)
+        .vsync(settings.general.vsync);
 
     notan::init_with(init)
         .add_config(win_config)

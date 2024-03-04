@@ -129,6 +129,20 @@ pub struct General {
     pub fps_limit: u8,
     pub title: String,
     pub map_position: MapPosition,
+    #[serde(default = "get_eight")]
+    pub multisampling: u8,
+    #[serde(default = "get_true")]
+    pub vsync: bool,
+    #[serde(default = "get_true")]
+    pub high_dpi: bool,
+}
+
+fn get_true() -> bool {
+    true
+}
+
+fn get_eight() -> u8 {
+    8
 }
 
 #[derive(Debug, Serialize, Deserialize)]
