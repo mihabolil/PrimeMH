@@ -4,9 +4,6 @@ use notan::prelude::*;
 use notan::{draw::*, extra};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
-use std::fs::File;
-use std::io::Read;
-use toml::Value as TomlValue;
 
 use winapi::um::winuser::{
     SetWindowLongW, GWL_EXSTYLE, GWL_STYLE, WS_BORDER, WS_CAPTION, WS_CLIPCHILDREN, WS_CLIPSIBLINGS, WS_EX_ACCEPTFILES,
@@ -18,8 +15,7 @@ use crate::mapgeneration::blacha::is_blacha_ok;
 use crate::memory::gamedata;
 use crate::memory::process::D2RWindowArea;
 use crate::settings::MapPosition;
-use crate::gui::translation::{Language, Translations};
-use crate::gui::translation::get_translation;
+use crate::gui::internationalization::{load_translations, get_translation, Language};
 use crate::{
     mapgeneration::{self, jsondata::SeedData},
     memory::{gamedata::GameData, process::D2RInstance},
@@ -393,36 +389,6 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
         draw.clear(Color::TRANSPARENT);
         gfx.render(&draw);
     }
-}
-
-fn load_settings_language() -> Result<Language, Box<dyn std::error::Error>> {
-    let mut file = File::open("settings.toml")?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
-    let value: TomlValue = toml::from_str(&contents)?;
-    
-    let language_str = value.get("general").and_then(|v| v.get("language")).and_then(TomlValue::as_str).unwrap_or("en");
-    let language = match language_str.to_lowercase().as_str() {
-        "en" => Language::English,
-        "es" => Language::Spanish,
-        "de" => Language::German,
-        "it" => Language::Italian,
-        "fr" => Language::French,
-        "ko" => Language::Korean,
-        "nl" => Language::Dutch,
-        "tw" => Language::TraditionalChinese,
-        "bg" => Language::Bogan,
-        _ => Language::English, // Default English if not found
-    };
-    
-    Ok(language)
-}
-
-fn load_translations() -> Result<Translations, Box<dyn std::error::Error>> {
-    let language = load_settings_language()?;
-    let translations = get_translation(&language);
-
-    Ok(translations)
 }
 
 fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
