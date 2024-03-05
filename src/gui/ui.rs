@@ -38,17 +38,17 @@ pub fn start_ui() -> Result<(), String> {
     };
 
     let win_config = WindowConfig::default()
-        .size(10, 10)
-        .always_on_top(true)
-        .decorations(false)
-        .mouse_passthrough(true)
-        .transparent(true)
-        .multisampling(settings.general.multisampling)
-        .window_icon(Some("primemh.png".into()))
-        .taskbar_icon(Some("primemh.png".into()))
-        .title("PrimeMH")
-        .high_dpi(settings.general.high_dpi)
-        .vsync(settings.general.vsync);
+        .set_size(10, 10)
+        .set_always_on_top(true)
+        .set_decorations(false)
+        .set_mouse_passthrough(true)
+        .set_transparent(true)
+        .set_multisampling(settings.general.multisampling)
+        .set_window_icon(Some("primemh.png".into()))
+        .set_taskbar_icon(Some("primemh.png".into()))
+        .set_title("PrimeMH")
+        .set_high_dpi(settings.general.high_dpi)
+        .set_vsync(settings.general.vsync);
 
     notan::init_with(init)
         .add_config(win_config)
@@ -156,7 +156,7 @@ fn update(app: &mut App, state: &mut State) {
     }
 
     let d2r_window = state.d2rprocess.get_window_info();
-    app.window().set_size(d2r_window.width as i32, d2r_window.height as i32);
+    app.window().set_size(d2r_window.width as u32, d2r_window.height as u32);
     app.window().set_position(d2r_window.x, d2r_window.y);
     let relative_mouse_pos = get_relative_mouse_pos(&d2r_window);
     if mouse_hovering_egui(relative_mouse_pos, state.egui_rect) {
