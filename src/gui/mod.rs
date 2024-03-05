@@ -6,5 +6,4 @@ mod draw_units;
 mod images;
 pub mod ui;
 mod util;
-mod translation;
-pub use translation::{Language, Translations};
+pub mod internationalization;
