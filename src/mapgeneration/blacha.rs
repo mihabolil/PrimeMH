@@ -69,8 +69,8 @@ pub fn is_blacha_ok(settings: &Settings) -> Result<bool, String> {
         Ok(_) => Ok(true),
         Err(_) => {
             let msg = format!("{}\n{}", "Error generating map data", &seed_data_str);
-            msgbox::create("D2R JBPrimeMHMH", &msg, IconType::Error).unwrap();
-            panic!("Error generating map data");
+            msgbox::create("D2R PrimeMH", &msg, IconType::Error).unwrap();
+            panic!("Error generating map data, check you have Visual C++ installed");
         }
     }
 }

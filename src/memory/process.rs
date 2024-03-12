@@ -100,12 +100,12 @@ impl D2RInstance {
         }
         D2RWindowArea {
             window_handle: hwnd,
-            width: (rect.right as f64 * scaling_factor) as i32,
-            height: (rect.bottom as f64 * scaling_factor) as i32,
+            width: (rect.right as f64 / scaling_factor) as i32,
+            height: (rect.bottom as f64 / scaling_factor) as i32,
             x: position.x,
             y: position.y,
-            left: (rect.left as f64 * scaling_factor) as i32,
-            top: (rect.top as f64 * scaling_factor) as i32,
+            left: (rect.left as f64 / scaling_factor) as i32,
+            top: (rect.top as f64 / scaling_factor) as i32,
         }
     }
 

@@ -166,7 +166,7 @@ fn update(app: &mut App, state: &mut State) {
     app.window().set_size(d2r_window.width as u32, d2r_window.height as u32);
     app.window().set_position(d2r_window.x, d2r_window.y);
     let relative_mouse_pos = get_relative_mouse_pos(&d2r_window);
-    if mouse_hovering_egui(relative_mouse_pos, state.egui_rect) {
+    if mouse_hovering_egui(relative_mouse_pos, state.egui_rect, app.window().dpi()) {
         if !state.egui_hovering {
             unsafe {
                 let hwnd = app.window().id() as isize as HWND;
@@ -238,7 +238,7 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
         let elapsed_time = SystemTime::now()
             .duration_since(state.launch_time)
             .expect("Fuck you!");
-        if elapsed_time <= Duration::from_secs(1) {
+        if elapsed_time <= Duration::from_secs(5) {
             let splash_text = format!("Joffreybesos' Map overlay (PrimeMH)");
             draw.text(&state.blizzard_font, &splash_text)
                 .position(app.window().width() as f32 * 0.5, app.window().height() as f32 * 0.1)
@@ -401,14 +401,12 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
 
 fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
     setup_custom_fonts(ctx);
-
     let translations = load_translations().unwrap_or_else(|_| {
         eprintln!("Failed to load translations. Falling back to English.");
         get_translation(&Language::English) 
     });
-
-    egui::Window::new("D2R PrimeMH").show(ctx, |ui| {
-
+    ctx.set_pixels_per_point(app.window().dpi() as f32);
+    egui::Window::new("D2R PrimeMH").default_open(false).show(ctx, |ui| {
         egui::CollapsingHeader::new(translations.map_settings)
             .default_open(true)
             .show(ui, |ui| {
@@ -689,11 +687,11 @@ fn get_relative_mouse_pos(d2r_window: &D2RWindowArea) -> (i32, i32) {
     (point.x - d2r_window.x, point.y - d2r_window.y)
 }
 
-fn mouse_hovering_egui(relative_mouse_pos: (i32, i32), egui_rect: Rect) -> bool {
+fn mouse_hovering_egui(relative_mouse_pos: (i32, i32), egui_rect: Rect, dpi: f64) -> bool {
     relative_mouse_pos.0 > egui_rect.left() as i32
-        && relative_mouse_pos.0 < egui_rect.right() as i32
+        && relative_mouse_pos.0 < (egui_rect.right() * dpi as f32) as i32
         && relative_mouse_pos.1 > egui_rect.top() as i32
-        && relative_mouse_pos.1 < egui_rect.bottom() as i32
+        && relative_mouse_pos.1 < (egui_rect.bottom() * dpi as f32) as i32
 }
 
 
