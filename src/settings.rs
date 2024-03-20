@@ -135,6 +135,8 @@ pub struct General {
     pub vsync: bool,
     #[serde(default = "get_true")]
     pub high_dpi: bool,
+    #[serde(default = "get_en")]
+    pub language: String,
 }
 
 fn get_true() -> bool {
@@ -143,6 +145,10 @@ fn get_true() -> bool {
 
 fn get_eight() -> u8 {
     8
+}
+
+fn get_en() -> String {
+    String::from("en");
 }
 
 #[derive(Debug, Serialize, Deserialize)]
