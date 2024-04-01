@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'primemh'",
+            "name": "Debug executable 'PrimeMH'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=primemh",
-                    "--package=primemh"
+                    "--bin=PrimeMH",
+                    "--package=PrimeMH"
                 ],
                 "filter": {
-                    "name": "primemh",
+                    "name": "PrimeMH",
                     "kind": "bin"
                 }
             },

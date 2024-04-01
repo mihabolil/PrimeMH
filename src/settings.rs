@@ -1,6 +1,11 @@
+#![allow(non_camel_case_types)]
 use config::{Config, ConfigError, File};
-use serde::{Deserialize, Serialize};
-use std::{env, fs, path::PathBuf};
+use serde::{Deserialize, Deserializer, Serialize};
+use strum::EnumString;
+use std::{default, env, fs, path::PathBuf};
+use locale_config::Locale;
+use std::str::FromStr;
+
 
 use crate::SETTINGS_FILE;
 
@@ -135,8 +140,8 @@ pub struct General {
     pub vsync: bool,
     #[serde(default = "get_true")]
     pub high_dpi: bool,
-    #[serde(default = "get_en")]
-    pub language: String,
+    #[serde(default)]
+    pub language: Locales,
 }
 
 fn get_true() -> bool {
@@ -147,8 +152,8 @@ fn get_eight() -> u8 {
     8
 }
 
-fn get_en() -> String {
-    String::from("en")
+fn blank_string() -> String {
+    String::from("")
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -181,6 +186,18 @@ impl Settings {
         let toml_string = toml::to_string(&self).expect("Could not encode settings.toml file!");
         fs::write(path, toml_string).expect("Could not write to settings.toml file!");
     }
+
+    pub fn detect_locale(&mut self) {
+        let locale = Locale::current();
+        log::info!("System's detected locale: {}", locale);
+        if self.general.language == Locales::Unknown {
+            let locale = locale.to_string().replace("-", "");
+            self.general.language = Locales::from_str(locale.as_str()).unwrap_or(Locales::enUS);
+            
+        }
+        log::info!("PrimeMH configured locale: {:?}", self.general.language);
+        self.save();
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Eq, PartialEq)]
@@ -189,4 +206,53 @@ pub enum MapPosition {
     Center,
     TopLeft,
     TopRight,
+}
+
+
+#[derive(Debug, Serialize, Default, EnumString, PartialEq, Eq)]
+pub enum Locales {
+    enUS,
+    zhTW,
+    deDE,
+    esES,
+    frFR,
+    itIT,
+    koKR,
+    plPL,
+    enBG,
+    #[default]
+    Unknown,
+}
+
+
+impl<'de> Deserialize<'de> for Locales {
+    fn deserialize<D>(deserializer: D) -> Result<Locales, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s: String = Deserialize::deserialize(deserializer)?;
+
+        // Check for alternative values and map them to enum variants
+        match s.as_str() {
+            "enUS" => Ok(Locales::enUS),
+            "zhTW" => Ok(Locales::zhTW),
+            "deDE" => Ok(Locales::deDE),
+            "esES" => Ok(Locales::esES),
+            "frFR" => Ok(Locales::frFR),
+            "itIT" => Ok(Locales::itIT),
+            "koKR" => Ok(Locales::koKR),
+            "plPL" => Ok(Locales::plPL),
+            "enBG" => Ok(Locales::enBG),
+            "en" => Ok(Locales::enUS),
+            "bg" => Ok(Locales::enBG),
+            "es" => Ok(Locales::esES),
+            "ko" => Ok(Locales::koKR),
+            "nl" => Ok(Locales::enUS),
+            "de" => Ok(Locales::deDE),
+            "it" => Ok(Locales::itIT),
+            "fr" => Ok(Locales::frFR),
+            "tw" => Ok(Locales::zhTW),
+            _ => Ok(Locales::Unknown), // Default to Unknown if value doesn't match any variants
+        }
+    }
 }

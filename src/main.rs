@@ -6,9 +6,14 @@ extern crate log;
 
 use std::{fs::File, io::Write};
 use gui::ui::start_ui;
+use localisation::localisation::Localisation;
 use logger::configure_logging;
+use lazy_static::lazy_static;
+
+use crate::localisation::localisation::{load_localisation_data, LocalisationEntry};
 
 mod gui;
+mod localisation;
 mod mapgeneration;
 mod memory;
 mod settings;
@@ -18,6 +23,9 @@ mod logger;
 
 pub const SETTINGS_FILE: &str = "settings.toml";
 pub const ITEM_FILTER_FILE: &str = "itemfilter.yml";
+lazy_static! {
+    static ref LOCALISATION: Localisation = load_localisation_data();
+}
 
 fn main() {
     

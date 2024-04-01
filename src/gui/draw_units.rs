@@ -7,7 +7,7 @@ use notan::prelude::*;
 
 use crate::gui::internationalization::{load_translations, get_translation, load_settings_language, Language};
 use crate::memory::{gamedata::GameData};
-use crate::settings::Settings;
+use crate::settings::{Locales, Settings};
 use crate::types::{
     missile::{MissileType, MissileUnit},
     npc::{MonsterFlag, NPC, NPCMode, NPCType, NPCUnit},
@@ -16,8 +16,11 @@ use crate::types::{
     states::State,
     stats::Immunity,
 };
+use crate::LOCALISATION;
 
-pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, width: &f32, height: &f32, formal_font: &Font, korean_font: &Font, taiwan_font: &Font, exocet_font: &Font, blizzard_font: &Font) {
+use super::Fonts;
+
+pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, width: &f32, height: &f32, fonts: &Fonts) {
     let player_pos = (game_data.player.pos_x, game_data.player.pos_y);
 
     // draw player dot at the centre
@@ -26,7 +29,7 @@ pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, wi
     // draw npcs
     game_data.npcs.iter().for_each(|npc| match npc.npc_type {
         NPCType::Monster => { draw_monster(npc, player_pos, draw, settings, width, height); }
-        NPCType::Town => { draw_town_npc(npc, player_pos, draw, settings.visual.scale, formal_font, korean_font, taiwan_font, width, height); }
+        NPCType::Town => { draw_town_npc(npc, player_pos, draw, settings, fonts, width, height); }
         NPCType::Pet => { draw_pet(npc, player_pos, draw, settings.visual.scale, width, height);}
         _ => (),
     });
@@ -34,7 +37,7 @@ pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, wi
     // draw bosses separately to ensure they draw on top
     game_data.npcs.iter().for_each(|npc| {
         if let NPCType::Boss = npc.npc_type {
-            draw_boss(npc, player_pos, draw, settings, exocet_font, width, height);
+            draw_boss(npc, player_pos, draw, settings, fonts, width, height);
         }
     });
 
@@ -62,8 +65,7 @@ pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, wi
                     false,
                     draw,
                     settings.visual.scale,
-                    formal_font,
-                    blizzard_font,
+                    fonts,
                     width, 
                     height
                 );
@@ -81,8 +83,7 @@ pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, wi
                 player.is_corpse,
                 draw,
                 settings.visual.scale,
-                formal_font,
-                blizzard_font,
+                fonts,
                 width, 
                 height
             );
@@ -188,8 +189,7 @@ fn draw_other_player(
     is_corpse: bool,
     draw: &mut Draw,
     scale: f32,
-    formal_font: &Font,
-    _blizzard_font: &Font,
+    fonts: &Fonts,
     width: &f32, height: &f32
 ) {
     let size = (1.8, 0.5);
@@ -202,13 +202,13 @@ fn draw_other_player(
 
         // there is a bug drawing non-english chars, it doesn't seem to be encoding though
         let text_pos = (other_player_pos.0, (other_player_pos.1 - (7.0 * scale)));
-        draw.text(formal_font, player_name)
+        draw.text(&fonts.formal_font, player_name)
             .position(text_pos.0 + 1.5, text_pos.1 + 1.5)
             .size(5.0 * scale)
             .color(Color::BLACK)
             .h_align_center()
             .v_align_top();
-        draw.text(formal_font, player_name)
+        draw.text(&fonts.formal_font, player_name)
             .position(text_pos.0, text_pos.1)
             .size(5.0 * scale)
             .color(color)
@@ -217,17 +217,25 @@ fn draw_other_player(
     }
 }
 
-fn draw_town_npc(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, scale: f32, formal_font: &Font, korean_font: &Font, taiwan_font: &Font,  width: &f32, height: &f32) {
+fn draw_town_npc(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, fonts: &Fonts,  width: &f32, height: &f32) {
+    let scale = settings.visual.scale;
     let size = (1.8, 0.5);
     let unit_pos = (npc.pos_x, npc.pos_y);
     let npc_pos = transform_position(unit_pos, size, player_pos, scale, width, height);
     let color = Color::WHITE;
     draw_cross(npc_pos, size.0 * scale, color, 0.4 * scale, draw);
+    
     let npc_name = format!("{:?}", npc.txt_file_no);
-    draw_npc_name(npc_pos, size.1, npc_name, draw, scale, formal_font, korean_font, taiwan_font);
+    let npc_label: Option<&String> = LOCALISATION.get_npc_name(npc_name, &settings.general.language);
+    match npc_label {
+        Some(npc_label) => {
+            draw_npc_name(npc_pos, size.1, npc_label, draw, settings, scale, fonts);
+        },
+        None => (),
+    }
 }
 
-fn draw_boss(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, exocet_font: &Font, width: &f32, height: &f32) {
+fn draw_boss(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, fonts: &Fonts, width: &f32, height: &f32) {
     if npc.mode != NPCMode::Dead && npc.mode != NPCMode::Death {
         let scale = settings.visual.scale;
         let boss_color: Color = convert_color(settings.monsters.boss_mob_color);
@@ -240,7 +248,7 @@ fn draw_boss(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &
             Some((health, max_health)) => {
                 let hp_percent = health as f32 / max_health as f32;
                 let boss_text = format!("{:?}", npc.txt_file_no);
-                draw_health_bar(npc_pos, size.1, hp_percent, boss_text, draw, settings, exocet_font);
+                draw_health_bar(npc_pos, size.1, hp_percent, boss_text, draw, settings, &fonts.exocet_font);
             },
             None => (),
         }
@@ -250,98 +258,21 @@ fn draw_boss(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &
 fn draw_npc_name(
     npc_pos: (f32, f32),
     size: f32,
-    text: String,
+    text: &String,
     draw: &mut Draw,
+    settings: &Settings,
     scale: f32,
-    formal_font: &Font,
-    korean_font: &Font,
-    taiwan_font: &Font,    
+    fonts: &Fonts, 
 ) {
     let font_size = 4.5;
     let npc_name_pos = (npc_pos.0, npc_pos.1 - ((size + 1.0) * scale * 3.2));
-
-    let translations = load_translations().unwrap_or_else(|_| {
-        log::info!("Failed to load translations. Falling back to English.");
-        get_translation(&Language::English) 
-    });
-
-    let current_language = load_settings_language().unwrap_or(Language::English); 
-    let font_to_use = match current_language {
-        Language::Korean => korean_font,
-        Language::TraditionalChinese => taiwan_font,
-        _ => formal_font,
+    let font_to_use = match settings.general.language {
+        Locales::koKR => fonts.korean_font,
+        Locales::zhTW => fonts.taiwan_font,
+        _ => fonts.formal_font,
     };
 
-    let mut npc_name = String::from(text);
-        
-    if npc_name.contains("Cain") {
-        npc_name = translations.deckardcain.to_string();
-    } else if npc_name.contains("Drehya") {
-        npc_name = translations.drehya.to_string();
-    } else if npc_name.contains("Charsi") {
-        npc_name = translations.charsi.to_string();
-    } else if npc_name.contains("Gheed") {
-        npc_name = translations.gheed.to_string();
-    } else if npc_name.contains("Kashya") {
-        npc_name = translations.kashya.to_string();
-    } else if npc_name.contains("Warriv") {
-        npc_name = translations.warriv.to_string();
-    } else if npc_name.contains("Akara") {
-        npc_name = translations.akara.to_string();
-    } else if npc_name.contains("Meshif") {
-        npc_name = translations.meshif.to_string();
-    } else if npc_name.contains("Elzix") {
-        npc_name = translations.elzix.to_string();
-    } else if npc_name.contains("Greiz") {
-        npc_name = translations.greiz.to_string();
-    } else if npc_name.contains("Drognan") {
-        npc_name = translations.drognan.to_string();
-    } else if npc_name.contains("Fara") {
-        npc_name = translations.fara.to_string();
-    } else if npc_name.contains("Lysander") {
-        npc_name = translations.lysander.to_string();
-    } else if npc_name.contains("Atma") {
-        npc_name = translations.atma.to_string();
-    } else if npc_name.contains("Geglash") {
-        npc_name = translations.geglash.to_string();
-    } else if npc_name.contains("Kaelan") {
-        npc_name = translations.kaelan.to_string();
-    } else if npc_name.contains("Jerhyn") {
-        npc_name = translations.jerhyn.to_string();
-    } else if npc_name.contains("Asheara") {
-        npc_name = translations.asheara.to_string();
-    } else if npc_name.contains("Natalya") {
-        npc_name = translations.natalya.to_string();
-    } else if npc_name.contains("Alkor") {
-        npc_name = translations.alkor.to_string();
-    } else if npc_name.contains("Ormus") {
-        npc_name = translations.ormus.to_string();
-    } else if npc_name.contains("Hratli") {
-        npc_name = translations.hratli.to_string();
-    } else if npc_name.contains("Halbu") {
-        npc_name = translations.halbu.to_string();
-    } else if npc_name.contains("Jamella") {
-        npc_name = translations.jamella.to_string();
-    } else if npc_name.contains("Tyrael") {
-        npc_name = translations.tyrael.to_string();
-    } else if npc_name.contains("Larzuk") {
-        npc_name = translations.larzuk.to_string();
-    } else if npc_name.contains("Malah") {
-        npc_name = translations.malah.to_string();
-    } else if npc_name.contains("Nihlathak") {
-        npc_name = translations.nihlathak.to_string();
-    } else if npc_name.contains("QualKehk") {
-        npc_name = translations.qualkehk.to_string();
-    } else if npc_name.contains("Izual") {
-        npc_name = translations.izual.to_string();
-    } else if npc_name.contains("Flavie") {
-        npc_name = translations.navi.to_string(); // Assuming "navi" is the key for Flavie
-    } else if npc_name.contains("Hadriel") {
-        npc_name = translations.malachai.to_string(); // Assuming "malachai" is the key for Hadriel
-    }
-    
-
-    draw.text(font_to_use, &npc_name)
+    draw.text(&font_to_use, &text)
         .position(npc_name_pos.0, npc_name_pos.1)
         .size(font_size * scale)
         .color(Color::TRANSPARENT)
@@ -357,13 +288,13 @@ fn draw_npc_name(
     )
     .color(Color::from_hex(0x00000088));
 
-    draw.text(font_to_use, &npc_name)
+    draw.text(&font_to_use, &text)
         .position(npc_name_pos.0 + 1.0, npc_name_pos.1 + 1.0)
         .size(font_size * scale)
         .color(Color::BLACK)
         .h_align_center()
         .v_align_middle();
-    draw.text(font_to_use, &npc_name)
+    draw.text(&font_to_use, &text)
         .position(npc_name_pos.0, npc_name_pos.1)
         .size(font_size * scale)
         .color(Color::from_hex(0xc6b276FF))

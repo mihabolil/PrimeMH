@@ -11,11 +11,12 @@ use winapi::um::winuser::{
 };
 
 use crate::gui::draw_map::draw_map;
+use crate::gui::internationalization::{get_translation, load_translations, Language};
+use crate::gui::Fonts;
 use crate::mapgeneration::blacha::is_blacha_ok;
 use crate::memory::gamedata;
 use crate::memory::process::D2RWindowArea;
 use crate::settings::MapPosition;
-use crate::gui::internationalization::{load_translations, get_translation, Language};
 use crate::{
     mapgeneration::{self, jsondata::SeedData},
     memory::{gamedata::GameData, process::D2RInstance},
@@ -33,10 +34,11 @@ use super::util::get_attached_levels;
 #[notan_main]
 pub fn start_ui() -> Result<(), String> {
     // load config
-    let settings: Settings = match Settings::new() {
+    let mut settings: Settings = match Settings::new() {
         Ok(settings) => settings,
         Err(err) => panic!("Error reading from settings file {}", err),
     };
+    settings.detect_locale();
 
     let win_config = WindowConfig::default()
         .set_size(10, 10)
@@ -61,7 +63,6 @@ pub fn start_ui() -> Result<(), String> {
         .build()
 }
 
-
 fn init(gfx: &mut Graphics) -> State {
     // load config
     let settings: Settings = match Settings::new() {
@@ -75,25 +76,35 @@ fn init(gfx: &mut Graphics) -> State {
 
     let blacha_result = is_blacha_ok(&settings);
     match blacha_result {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(log_text) => {
-            log::error!("Error with generating map data from D2LoD\nCheck your D2LoD settings\nBlacha tool returned:\n{}", log_text);
+            log::error!(
+                "Error with generating map data from D2LoD\nCheck your D2LoD settings\nBlacha tool returned:\n{}",
+                log_text
+            );
             panic!("{} {}", "Failed to generate map data!\n", log_text);
-        },
+        }
     }
     log::info!("D2LoD test passed");
-    
+
     let images = images::load_images(gfx);
     log::info!("Loaded images");
 
     let d2rprocess = D2RInstance::open_title(settings.general.title.clone());
+
     let exocet_font = gfx.create_font(include_bytes!("./fonts/exocet.otf")).unwrap();
     let formal_font = gfx.create_font(include_bytes!("./fonts/formal.otf")).unwrap();
     let korean_font = gfx.create_font(include_bytes!("./fonts/NotoSansCJKkr-Regular.otf")).unwrap();
     let taiwan_font = gfx.create_font(include_bytes!("./fonts/NotoSansCJKtc-Regular.otf")).unwrap();
-    let blizzard_font = gfx
-        .create_font(include_bytes!("./fonts/blizzardglobaltcunicode.ttf"))
-        .unwrap();
+    let blizzard_font = gfx.create_font(include_bytes!("./fonts/blizzardglobaltcunicode.ttf")).unwrap();
+
+    let fonts = Fonts {
+        exocet_font,
+        formal_font,
+        korean_font,
+        taiwan_font,
+        blizzard_font,
+    };
 
     log::info!("Loaded fonts");
 
@@ -105,11 +116,7 @@ fn init(gfx: &mut Graphics) -> State {
         seed_data,
         last_seed: 0,
         game_data: None,
-        exocet_font,
-        formal_font,
-        korean_font,
-        taiwan_font,
-        blizzard_font,
+        fonts,
         images,
         item_frame: 0,
         egui_rect: Rect {
@@ -129,11 +136,7 @@ pub(crate) struct State {
     seed_data: SeedData,
     last_seed: u32,
     game_data: Option<GameData>,
-    exocet_font: Font,
-    formal_font: Font,
-    taiwan_font: Font,
-    korean_font: Font,
-    blizzard_font: Font,
+    fonts: Fonts,
     images: HashMap<String, Texture>,
     item_frame: i32,
     egui_rect: Rect,
@@ -235,12 +238,10 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
 
         let mut draw = gfx.create_draw();
         draw.mask(Some(&mask));
-        let elapsed_time = SystemTime::now()
-            .duration_since(state.launch_time)
-            .expect("Fuck you!");
+        let elapsed_time = SystemTime::now().duration_since(state.launch_time).expect("Fuck you!");
         if elapsed_time <= Duration::from_secs(5) {
             let splash_text = format!("Joffreybesos' Map overlay (PrimeMH)");
-            draw.text(&state.blizzard_font, &splash_text)
+            draw.text(&state.fonts.blizzard_font, &splash_text)
                 .position(app.window().width() as f32 * 0.5, app.window().height() as f32 * 0.1)
                 .size(52.0)
                 .color(Color::from_hex(0xC6B276FF))
@@ -262,7 +263,7 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                 obfstr::obfstr!("Если вы заплатили за это, вас обманули\n")
             );
 
-            draw.text(&state.blizzard_font, &splash_text)
+            draw.text(&state.fonts.blizzard_font, &splash_text)
                 .position(app.window().width() as f32 * 0.5, app.window().height() as f32 * 0.3)
                 .size(22.0)
                 .color(Color::from_hex(0xC6B276FF))
@@ -302,17 +303,21 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
 
                                 let player_pos_x = (game_data.player.pos_x - this_level.offset.x as f32) * render_scale;
                                 let player_pos_y = (game_data.player.pos_y - this_level.offset.y as f32) * render_scale;
-                                let scale_matrix = Mat3::from_scale(Vec2::from([scale / render_scale, scale / 2.0 / render_scale]));
+                                let scale_matrix =
+                                    Mat3::from_scale(Vec2::from([scale / render_scale, scale / 2.0 / render_scale]));
                                 draw.transform().push(scale_matrix);
                                 draw.image(map_image)
                                     .translate(map_position_x, map_position_y)
-                                    .rotate_degrees_from((map_position_x + player_pos_x, map_position_y + player_pos_y), 45.0);
+                                    .rotate_degrees_from(
+                                        (map_position_x + player_pos_x, map_position_y + player_pos_y),
+                                        45.0,
+                                    );
 
                                 draw.transform().pop();
                                 draw_presets(
                                     &mut draw,
                                     this_level,
-                                    &state.exocet_font,
+                                    &state.fonts.exocet_font,
                                     game_data,
                                     &state.settings,
                                     &state.images,
@@ -330,11 +335,7 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                         &state.settings,
                         &width,
                         &height,
-                        &state.formal_font,
-                        &state.korean_font,
-                        &state.taiwan_font,
-                        &state.exocet_font,
-                        &state.blizzard_font,
+                        &state.fonts
                     );
                     draw_objects(&mut draw, game_data, &state.settings, &width, &height, &state.images);
                     draw.mask(None);
@@ -351,7 +352,7 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
 
                 if last_game_name.len() > 0 {
                     let last_game = format!("Last Game: {}", last_game_name);
-                    draw.text(&state.exocet_font, &last_game)
+                    draw.text(&state.fonts.exocet_font, &last_game)
                         .position(app.window().width() as f32 * 0.75, 10.0)
                         .size(16.0)
                         .color(Color::from_hex(0xC6B276FF))
@@ -366,23 +367,24 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
             let font_size = 12.0;
             let warning_text: String = format!("{}", obfstr::obfstr!("This is a free tool"));
             let warning_text2: String = format!("{}", obfstr::obfstr!("如果您為此付出了，您已經被騙"));
-            let warning_text3: String = format!("{}", obfstr::obfstr!("당신이 이것을 지불했다면 당신은 사기를당했습니다"));
-            
-            draw.text(&state.blizzard_font, &warning_text)
+            let warning_text3: String =
+                format!("{}", obfstr::obfstr!("당신이 이것을 지불했다면 당신은 사기를당했습니다"));
+
+            draw.text(&state.fonts.blizzard_font, &warning_text)
                 .position(app.window().width() as f32 - 5.0, 5.0)
                 .size(font_size)
                 .color(Color::from_hex(0xC6B276AA))
                 .h_align_right()
                 .v_align_top();
 
-            draw.text(&state.blizzard_font, &warning_text2)
+            draw.text(&state.fonts.blizzard_font, &warning_text2)
                 .position(app.window().width() as f32 - 5.0, app.window().height() as f32)
                 .size(font_size)
                 .color(Color::from_hex(0xC6B276AA))
                 .h_align_right()
                 .v_align_bottom();
-            
-            draw.text(&state.blizzard_font, &warning_text3)
+
+            draw.text(&state.fonts.blizzard_font, &warning_text3)
                 .position(5.0, app.window().height() as f32)
                 .size(font_size)
                 .color(Color::from_hex(0xC6B276AA))
@@ -403,14 +405,13 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
     setup_custom_fonts(ctx);
     let translations = load_translations().unwrap_or_else(|_| {
         log::info!("Failed to load translations. Falling back to English.");
-        get_translation(&Language::English) 
+        get_translation(&Language::English)
     });
     ctx.set_pixels_per_point(app.window().dpi() as f32);
     egui::Window::new("D2R PrimeMH").default_open(false).show(ctx, |ui| {
         egui::CollapsingHeader::new(translations.map_settings)
             .default_open(true)
             .show(ui, |ui| {
-
                 egui::Grid::new("settings_grid")
                     .num_columns(2)
                     .spacing([20.0, 6.0])
@@ -434,9 +435,21 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
 
                         ui.label(translations.map_position);
                         ui.horizontal(|ui| {
-                            ui.radio_value(&mut state.settings.general.map_position, MapPosition::Center, translations.center);
-                            ui.radio_value(&mut state.settings.general.map_position, MapPosition::TopLeft, translations.top_left);
-                            ui.radio_value(&mut state.settings.general.map_position, MapPosition::TopRight, translations.top_right);
+                            ui.radio_value(
+                                &mut state.settings.general.map_position,
+                                MapPosition::Center,
+                                translations.center,
+                            );
+                            ui.radio_value(
+                                &mut state.settings.general.map_position,
+                                MapPosition::TopLeft,
+                                translations.top_left,
+                            );
+                            ui.radio_value(
+                                &mut state.settings.general.map_position,
+                                MapPosition::TopRight,
+                                translations.top_right,
+                            );
                         });
                         ui.end_row();
                     });
@@ -460,7 +473,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                                 .speed(0.01),
                         );
                         ui.end_row();
-        
+
                         ui.label(translations.show_portals);
                         ui.add(egui::Checkbox::new(&mut state.settings.portals.enabled, ""));
                         ui.label(translations.size);
@@ -470,7 +483,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                                 .speed(0.1),
                         );
                         ui.end_row();
-        
+
                         ui.label(translations.show_shrines);
                         ui.add(egui::Checkbox::new(&mut state.settings.shrines.enabled, ""));
                         ui.label(translations.size);
@@ -488,12 +501,12 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.end_row();
                     });
             });
-    
+
         ui.separator();
         egui::CollapsingHeader::new(translations.monsters)
             .default_open(false)
             .show(ui, |ui| {
-                egui::Grid::new("monsters_grid") 
+                egui::Grid::new("monsters_grid")
                     .num_columns(2)
                     .spacing([20.0, 6.0])
                     .striped(true)
@@ -501,7 +514,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.label(translations.show_immunities);
                         ui.add(egui::Checkbox::new(&mut state.settings.monsters.immunities, ""));
                         ui.end_row();
-        
+
                         ui.label(translations.normal_mobs);
                         ui.add(
                             egui::DragValue::new(&mut state.settings.monsters.normal_mobs_size)
@@ -510,7 +523,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         );
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.monsters.normal_mob_color);
                         ui.end_row();
-        
+
                         ui.label(translations.minions);
                         ui.add(
                             egui::DragValue::new(&mut state.settings.monsters.minions_mobs_size)
@@ -519,7 +532,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         );
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.monsters.minions_mob_color);
                         ui.end_row();
-        
+
                         ui.label(translations.champions);
                         ui.add(
                             egui::DragValue::new(&mut state.settings.monsters.champions_mobs_size)
@@ -528,7 +541,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         );
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.monsters.champions_mob_color);
                         ui.end_row();
-        
+
                         ui.label(translations.uniques);
                         ui.add(
                             egui::DragValue::new(&mut state.settings.monsters.unique_mobs_size)
@@ -537,7 +550,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         );
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.monsters.unique_mob_color);
                         ui.end_row();
-        
+
                         ui.label(translations.bosses);
                         ui.add(
                             egui::DragValue::new(&mut state.settings.monsters.boss_mobs_size)
@@ -548,7 +561,6 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.end_row();
                     });
             });
-        
 
         ui.separator();
         egui::CollapsingHeader::new(translations.lines_and_pathfinding)
@@ -563,23 +575,23 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.add(egui::Checkbox::new(&mut state.settings.lines.waypoint_enabled, ""));
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.lines.waypoint_rgba);
                         ui.end_row();
-        
+
                         ui.label(translations.show_exit_lines);
                         ui.add(egui::Checkbox::new(&mut state.settings.lines.exit_enabled, ""));
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.lines.exit_rgba);
                         ui.end_row();
-        
-                        ui.label(translations.show_quest_lines); 
+
+                        ui.label(translations.show_quest_lines);
                         ui.add(egui::Checkbox::new(&mut state.settings.lines.quest_enabled, ""));
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.lines.quest_rgba);
                         ui.end_row();
-        
+
                         ui.label(translations.show_boss_lines);
                         ui.add(egui::Checkbox::new(&mut state.settings.lines.boss_enabled, ""));
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.lines.boss_rgba);
                         ui.end_row();
                     });
-            });                    
+            });
 
         ui.separator();
         egui::CollapsingHeader::new(translations.missiles)
@@ -593,7 +605,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.label(translations.show_missiles);
                         ui.add(egui::Checkbox::new(&mut state.settings.missiles.enabled, ""));
                         ui.end_row();
-        
+
                         // Fire
                         ui.label(translations.fire);
                         ui.add(
@@ -603,7 +615,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         );
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.missiles.fire_color);
                         ui.end_row();
-        
+
                         // Cold
                         ui.label(translations.cold);
                         ui.add(
@@ -613,7 +625,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         );
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.missiles.cold_color);
                         ui.end_row();
-        
+
                         // Poison
                         ui.label(translations.poison);
                         ui.add(
@@ -623,7 +635,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         );
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.missiles.poison_color);
                         ui.end_row();
-        
+
                         // Lightning
                         ui.label(translations.lightning);
                         ui.add(
@@ -633,7 +645,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         );
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.missiles.lightning_color);
                         ui.end_row();
-        
+
                         // Physical
                         ui.label(translations.physical);
                         ui.add(
@@ -643,7 +655,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         );
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.missiles.physical_color);
                         ui.end_row();
-        
+
                         // Magic
                         ui.label(translations.magic);
                         ui.add(
@@ -655,16 +667,6 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.end_row();
                     });
             });
-        
-        ui.separator();
-        ui.horizontal(|ui| {
-            if ui.button(translations.quit).clicked() {
-                app.exit();
-            }
-            if ui.button(translations.save_settings).clicked() {
-                state.settings.save();
-            }
-        });
 
         ui.separator();
         ui.hyperlink("https://discord.gg/swswCBXbp6");
@@ -675,9 +677,19 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
             obfstr::obfstr!("如果您為此付出了，您已經被騙了\n"),
             obfstr::obfstr!("당신이 이것을 지불했다면 당신은 사기를당했습니다\n"),
             obfstr::obfstr!("あなたがこれに対して支払った場合、あなたは詐欺されています\n"),
-            obfstr::obfstr!("Если вы заплатили за это, вас обманули\n")            
+            obfstr::obfstr!("Если вы заплатили за это, вас обманули\n")
         );
         ui.label(splash_text);
+
+        ui.separator();
+        ui.horizontal(|ui| {
+            if ui.button(translations.quit).clicked() {
+                app.exit();
+            }
+            if ui.button(translations.save_settings).clicked() {
+                state.settings.save();
+            }
+        });
     });
 }
 
@@ -694,12 +706,12 @@ fn mouse_hovering_egui(relative_mouse_pos: (i32, i32), egui_rect: Rect, dpi: f64
         && relative_mouse_pos.1 < (egui_rect.bottom() * dpi as f32) as i32
 }
 
-
 fn setup_custom_fonts(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::default();
-    fonts
-        .font_data
-        .insert("blizzard".to_owned(), egui::FontData::from_static(include_bytes!("./fonts/blizzardglobaltcunicode.ttf")));
+    fonts.font_data.insert(
+        "blizzard".to_owned(),
+        egui::FontData::from_static(include_bytes!("./fonts/blizzardglobaltcunicode.ttf")),
+    );
     // Put my font first (highest priority) for proportional text:
     fonts
         .families
