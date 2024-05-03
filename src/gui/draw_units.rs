@@ -5,7 +5,6 @@ use notan::math::Rect;
 use notan::prelude::*;
 
 
-use crate::gui::internationalization::{load_translations, get_translation, load_settings_language, Language};
 use crate::localisation::localisation::Localisation;
 use crate::memory::{gamedata::GameData};
 use crate::settings::{Locales, Settings};
@@ -37,7 +36,7 @@ pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, wi
     // draw bosses separately to ensure they draw on top
     game_data.npcs.iter().for_each(|npc| {
         if let NPCType::Boss = npc.npc_type {
-            draw_boss(npc, player_pos, draw, settings, fonts, width, height);
+            draw_boss(npc, player_pos, draw, settings, fonts, width, height, localisation);
         }
     });
 
@@ -230,7 +229,7 @@ fn draw_town_npc(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, setting
     draw_npc_name(npc_pos, size.1, &npc_label, draw, settings, scale, fonts);
 }
 
-fn draw_boss(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, fonts: &Fonts, width: &f32, height: &f32) {
+fn draw_boss(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, fonts: &Fonts, width: &f32, height: &f32, localisation: &Localisation) {
     if npc.mode != NPCMode::Dead && npc.mode != NPCMode::Death {
         let scale = settings.visual.scale;
         let boss_color: Color = convert_color(settings.monsters.boss_mob_color);
@@ -243,7 +242,8 @@ fn draw_boss(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &
             Some((health, max_health)) => {
                 let hp_percent = health as f32 / max_health as f32;
                 let boss_text = format!("{:?}", npc.txt_file_no);
-                draw_health_bar(npc_pos, size.1, hp_percent, boss_text, draw, settings, &fonts.exocet_font);
+                let npc_label: String = localisation.get_npc_name(&boss_text);
+                draw_health_bar(npc_pos, size.1, hp_percent, npc_label, draw, settings, &fonts.exocet_font);
             },
             None => (),
         }

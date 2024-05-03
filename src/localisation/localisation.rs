@@ -54,7 +54,6 @@ impl Localisation {
         let new_key_name: String = key_name.chars()
             .filter(|&c| !c.is_digit(10) && !c.is_whitespace())
             .collect();
-        log::info!("{}", new_key_name.replace("-",""));
         let new_string = self.npcs.get(&new_key_name.to_lowercase().replace("-",""));
         return match new_string {
             Some(s) => s.clone(),
@@ -66,8 +65,19 @@ impl Localisation {
         let new_key_name: String = key_name.chars()
             .filter(|&c| !c.is_digit(10) && !c.is_whitespace())
             .collect();
-        log::info!("{}", new_key_name.replace("-",""));
         let new_string = self.primemh.get(&new_key_name.to_lowercase().replace("-",""));
+        return match new_string {
+            Some(s) => s.clone(),
+            None => String::new(),
+        }
+    }
+
+    pub fn get_level(&self, key_name: &String) -> String {
+        let mut new_key_name: String = key_name.chars()
+            .filter(|&c| !c.is_whitespace())
+            .collect();
+        new_key_name = new_key_name.to_lowercase().replace("-","");
+        let new_string = self.levels.get(&new_key_name);
         return match new_string {
             Some(s) => s.clone(),
             None => String::new(),
@@ -128,7 +138,10 @@ fn vec_to_hashmap(file_data: Vec<LocalisationEntry>, locale: &Locales) -> HashMa
             Locales::enBG => entry.enUS.clone(),
             Locales::Unknown => entry.enUS.clone(),
         };
-        hashmap.insert(entry.Key.to_lowercase().replace("-",""), val);
+        let new_key_name: String = entry.Key.chars()
+            .filter(|&c| !c.is_whitespace())
+            .collect();
+        hashmap.insert(new_key_name.to_lowercase().replace("-",""), val);
     }
     hashmap
 }

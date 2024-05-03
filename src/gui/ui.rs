@@ -11,8 +11,8 @@ use winapi::um::winuser::{
 };
 
 use crate::gui::draw_map::draw_map;
-use crate::gui::internationalization::{get_translation, load_translations, Language};
 use crate::gui::Fonts;
+use crate::localisation;
 use crate::localisation::localisation::{load_localisation_data, Localisation};
 use crate::mapgeneration::blacha::is_blacha_ok;
 use crate::memory::gamedata;
@@ -328,6 +328,7 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                                     &state.images,
                                     &width,
                                     &height,
+                                    &state.localisation
                                 );
                                 draw_lines(&mut draw, this_level, game_data, &state.settings, &width, &height);
                             }
