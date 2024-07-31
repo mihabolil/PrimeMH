@@ -58,6 +58,7 @@ pub fn is_blacha_ok(settings: &Settings) -> Result<bool, String> {
         let msg = format!("Could not find d2-mapgen.exe {}, check your paths, check settings.toml, follow the instructions.", blacha_exe);
         panic!("{}", msg);
     }
+    let d2lodpath = seed_request.d2lodpath.clone().canonicalize().expect("Failed to get absolute path for d2lodpath");
     
     log::info!(
         "Generating fresh data for seed {} and difficulty {} d2lod: {} blacha: {}",
@@ -72,11 +73,14 @@ pub fn is_blacha_ok(settings: &Settings) -> Result<bool, String> {
     match json {
         Ok(_) => Ok(true),
         Err(_) => {
-            log::error!(
-                "Error with generating map data from D2LoD\nCheck your D2LoD settings\nBlacha tool returned:\n{}",
-                seed_data_str
-            );
-            panic!("Error generating map data, check you have Visual C++ installed. Restart your PC.\nMake sure you aren't running from your desktop or dropbox etc");
+            let d2log_absolute_path = d2lodpath.to_str().unwrap();
+            let forbidden_folders: Vec<&str> = vec!["Desktop", "Dropbox", "Google Drive", "Dev"];
+            for folder in forbidden_folders {
+                if d2log_absolute_path.contains(folder) {
+                    log::error!("You really should move the MH out of your {} folder", folder);
+                }
+            }
+            panic!("Error generating map data.\nCheck you have Visual C++ installed.\nRestart your PC.\nMake sure you aren't running from your desktop or dropbox etc");
         }
     }
 }

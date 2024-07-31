@@ -6,9 +6,7 @@ extern crate log;
 
 use std::{fs::File, io::Write};
 use gui::ui::start_ui;
-use localisation::localisation::Localisation;
 use logger::configure_logging;
-use lazy_static::lazy_static;
 
 use crate::localisation::localisation::{load_localisation_data, LocalisationEntry};
 

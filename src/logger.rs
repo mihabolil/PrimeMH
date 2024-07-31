@@ -7,6 +7,7 @@ use msgbox::IconType;
 pub fn configure_logging() {
     let target = Box::new(File::create("primemh.log").expect("Can't create bot agent log file"));
 
+    // intercept panics and log an error for them
     std::panic::set_hook(Box::new(|panic_info| {
         let msg = format!("{}", panic_info);
         log::error!("PANIC: {}", msg.replace("C:\\Users\\mjg999\\",""));
