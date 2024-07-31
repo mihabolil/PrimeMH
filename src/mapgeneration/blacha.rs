@@ -74,13 +74,13 @@ pub fn is_blacha_ok(settings: &Settings) -> Result<bool, String> {
         Ok(_) => Ok(true),
         Err(_) => {
             let d2log_absolute_path = d2lodpath.to_str().unwrap();
-            let forbidden_folders: Vec<&str> = vec!["Desktop", "Dropbox", "Google Drive", "Dev"];
+            let forbidden_folders: Vec<&str> = vec!["Desktop", "Dropbox", "Google Drive"];
             for folder in forbidden_folders {
                 if d2log_absolute_path.contains(folder) {
                     log::error!("You really should move the MH out of your {} folder", folder);
                 }
             }
-            panic!("Error generating map data.\nCheck you have Visual C++ installed.\nRestart your PC.\nMake sure you aren't running from your desktop or dropbox etc");
+            panic!("Error generating map data.\n\nCheck you have Visual C++ installed.\nRestart your PC.");
         }
     }
 }
