@@ -72,7 +72,6 @@ fn init(gfx: &mut Graphics) -> State {
         Ok(settings) => settings,
         Err(err) => {
             log::error!("Error reading from settings file {}", err);
-            panic!("Error reading from settings file {}", err)
         }
     };
     log::info!("Loaded settings file");

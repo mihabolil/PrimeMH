@@ -49,7 +49,7 @@ impl D2RInstance {
         let handle: HANDLE = unsafe { OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid) };
         if handle == NULL {
             log::debug!("OpenProcess failed. Error: {:?}", std::io::Error::last_os_error());
-            panic!("{} not found\nExiting PrimeMH...", title);
+            panic!("Window title '{}' not found.\nIf you are running the game as admin you must run MH as admin.\nIf you have a custom window title you must specify in settings.toml\nExiting PrimeMH...", title);
         }
         let base_address = Self::base_address(handle).unwrap();
         Self {

@@ -27,7 +27,7 @@ pub fn get_seed_data(seed_request: SeedRequest) -> SeedData {
         Ok(json) => json,
         Err(e) => {
             delete_cached_file(&cached_seed_data_file);
-            panic!("{} {}", "Failed to generate map data!", e);
+            log::error!("{} {}", "Failed to generate map data!", e);
         }
     }
 }

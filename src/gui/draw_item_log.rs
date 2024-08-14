@@ -68,7 +68,7 @@ pub fn draw_item_log(
                                 synth.set_rate(speech_rate).unwrap();
                                 match synth.speak(item_text, None) {
                                     Ok(_) => (),
-                                    Err(e) => log::error!("Text to speech error: {:?}", e)
+                                    Err(e) => log::debug!("Text to speech error: {:?}", e)
                                 }
                                 sapi_lite::finalize();
                             });
