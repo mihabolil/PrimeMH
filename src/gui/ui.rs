@@ -137,7 +137,7 @@ fn init(gfx: &mut Graphics) -> State {
         relative_mouse_pos: (0, 0),
         launch_time: SystemTime::now(),
         localisation,
-        ui_visible: true,
+        ui_panel_visible: true,
         last_toggle: Instant::now(),
     }
 }
@@ -158,18 +158,20 @@ pub(crate) struct State {
     relative_mouse_pos: (i32, i32),
     launch_time: SystemTime,
     localisation: Localisation,
-    ui_visible: bool,
+    ui_panel_visible: bool,
     last_toggle: Instant,
 }
 
 fn update(app: &mut App, state: &mut State) {
-    let device_state = DeviceState::new();
-    let keys: Vec<Keycode> = device_state.get_keys();
+    //Checks if D2R window is active and then uses Insert key to toggle egui panel visibility
+    if state.d2rprocess.is_window_active(app.window().id()) {
+        let device_state = DeviceState::new();
+        let keys: Vec<Keycode> = device_state.get_keys();
 
-    // Check if Insert key is pressed and 1 second has passed since the last toggle
-    if keys.contains(&Keycode::Insert) && state.last_toggle.elapsed() >= Duration::from_millis(300) {
-        state.ui_visible = !state.ui_visible;
-        state.last_toggle = Instant::now(); // Update the last toggle time
+        if keys.contains(&Keycode::Insert) && state.last_toggle.elapsed() >= Duration::from_millis(300) {
+            state.ui_panel_visible = !state.ui_panel_visible;
+            state.last_toggle = Instant::now();
+        }
     }
     
     if let Some(game_data) = GameData::read_game_memory(&state.d2rprocess) {
@@ -238,7 +240,7 @@ fn update(app: &mut App, state: &mut State) {
 fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut State) {
     if state.d2rprocess.is_window_active(app.window().id()) || !state.settings.general.overlay_mode {
         let mut output = plugins.egui(|ctx| {
-            if state.ui_visible{
+            if state.ui_panel_visible{
                 create_egui_panel(app, ctx, state);
             }    
             state.egui_rect = ctx.used_rect();
