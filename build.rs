@@ -11,6 +11,7 @@ fn main() {
         WindowsResource::new()
             .set_icon("primemh.ico")
             .compile()
+            .set_manifest_file("app.manifest")
             .unwrap();
     }
 }
