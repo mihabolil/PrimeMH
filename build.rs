@@ -10,8 +10,8 @@ fn main() {
     if env::var_os("CARGO_CFG_WINDOWS").is_some() {
         WindowsResource::new()
             .set_icon("primemh.ico")
-            .compile()
             .set_manifest_file("app.manifest")
+            .compile()
             .unwrap();
     }
 }

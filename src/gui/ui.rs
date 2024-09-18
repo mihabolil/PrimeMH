@@ -117,6 +117,15 @@ fn init(gfx: &mut Graphics) -> State {
     let seed_data = SeedData::default();
 
     log::info!("Started UI successfully");
+
+    let texture = gfx
+            .create_texture()
+            .from_image(include_bytes!("images/translate.png"))
+            .with_premultiplied_alpha()
+            .build()
+            .unwrap();
+
+    let language_icon = gfx.egui_register_texture(&texture);
     
 
     State {
@@ -142,6 +151,7 @@ fn init(gfx: &mut Graphics) -> State {
         map_overlay_visible: true,
         map_overlay_toggle: false,
         language_selector_visible: false,
+        language_icon
     }
 }
 
@@ -166,6 +176,7 @@ pub(crate) struct State {
     map_overlay_visible: bool,
     map_overlay_toggle: bool,
     language_selector_visible: bool,
+    language_icon: egui::SizedTexture,
 }
 
 fn update(app: &mut App, state: &mut State) {
@@ -526,12 +537,32 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
     let translations = &state.localisation;
     ctx.set_pixels_per_point(app.window().dpi() as f32);
     egui::Window::new(egui::RichText::new("PrimeMH").size(16.0)).default_open(false).show(ctx, |ui| {
-        let toggle_text = format!(
-            "{}\n{}",
-            translations.get("hide_ui"),
-            translations.get("hide_map"),
-        );
-        ui.label(toggle_text);
+        egui::Grid::new("helper_text")
+        .num_columns(2)
+        .spacing([6.0, 6.0])
+        .striped(true)
+        .show(ui, |ui| {
+            ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
+                let toggle_text = format!(
+                    "{}\n{}",
+                    translations.get("hide_ui"),
+                    translations.get("hide_map"),
+                );
+                ui.label(toggle_text);
+            });
+            ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
+                
+                if ui
+                    .add(egui::Button::image(egui::Image::new(state.language_icon)
+                        .max_width(25.0)
+                        .tint(egui::Color32::GRAY)))
+                    .clicked()
+                {
+                    state.language_selector_visible = true;
+                }
+            });
+        });
+        
         ui.separator();
         egui::CollapsingHeader::new(translations.get("map_settings"))
             .default_open(true)
@@ -577,10 +608,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         });
                         ui.end_row();
                         
-                        if ui.button(state.localisation.get("choose_language")).clicked() {
-                            state.language_selector_visible = true;
-                        }
-                        ui.end_row();
+                        
                     });
             });
 
