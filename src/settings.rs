@@ -229,7 +229,7 @@ pub enum MapPosition {
 }
 
 
-#[derive(Debug, Serialize, Default, EnumString, PartialEq, Eq)]
+#[derive(Debug, Serialize, Default, EnumString, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Locales {
     enUS,
     zhTW,

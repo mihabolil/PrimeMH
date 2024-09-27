@@ -5,6 +5,7 @@ use std::{env, fs};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use crate::LOCALISATION;
 use crate::settings::Settings;
 
 use super::cache;
@@ -12,6 +13,7 @@ use super::jsondata::SeedData;
 use super::seeddata::SeedRequest;
 
 pub fn get_seed_data(seed_request: SeedRequest) -> SeedData {
+    let localisation = LOCALISATION.lock().unwrap();
     let cached_seed_data_file = cache::cached_file_name(&seed_request.map_seed, &seed_request.difficulty);
     let seed_data_str: String = if Path::new(&cached_seed_data_file).exists() {
         log::info!("Reading cached map data from file {}", &cached_seed_data_file.to_str().unwrap());
@@ -29,13 +31,13 @@ pub fn get_seed_data(seed_request: SeedRequest) -> SeedData {
         Ok(json) => json,
         Err(_e) => {
             delete_cached_file(&cached_seed_data_file);
-            panic!("Critical error: Unable to generate map data");
+            panic!("{}", localisation.get_primemh("error7"))
         }
     }
 }
 
 pub fn is_blacha_ok(settings: &Settings) -> Result<bool, String> {
-
+    let localisation = LOCALISATION.lock().unwrap();
     let seed_request = SeedRequest {
         map_seed: 123,
         difficulty: 2,
@@ -46,18 +48,18 @@ pub fn is_blacha_ok(settings: &Settings) -> Result<bool, String> {
     let d2lodpath = get_path_as_str(&settings.general.d2lodpath);
     
     if !settings.general.d2lodpath.exists() {
-        let msg = format!("Could not find d2lodpath {}, make sure you downloaded the d2lod zip as specified in #get-started.",  d2lodpath);
+        let msg = format!("{}\n{}", localisation.get_primemh("error8"), d2lodpath);
         panic!("{}", msg);
     }
     if !settings.general.d2lodpath.join("d2data.mpq").exists() {
-        let msg = format!("Could not find d2data.mpq in d2lodpath {}, make sure you downloaded the d2lod zip as specified in #get-started.", d2lodpath);
+        let msg = format!("{}\n{}", localisation.get_primemh("error8"), d2lodpath);
         panic!("{}", msg);
     }
 
     let blacha_exe = get_path_as_str(&settings.general.blacha_exe);
     
     if !settings.general.blacha_exe.exists() {
-        let msg = format!("Could not find d2-mapgen.exe {}, check your paths, check settings.toml, follow the instructions.", blacha_exe);
+        let msg = format!("{}\n{}", localisation.get_primemh("error10"), blacha_exe);
         panic!("{}", msg);
     }
     let d2lodpath = seed_request.d2lodpath.clone().canonicalize().expect("Failed to get absolute path for d2lodpath");
@@ -79,10 +81,10 @@ pub fn is_blacha_ok(settings: &Settings) -> Result<bool, String> {
             let forbidden_folders: Vec<&str> = vec!["Desktop", "Dropbox", "Google Drive"];
             for folder in forbidden_folders {
                 if d2log_absolute_path.contains(folder) {
-                    log::error!("You really should move the MH out of your {} folder", folder);
+                    log::error!("{}\n{}", localisation.get_primemh("error1"), folder);
                 }
             }
-            panic!("Error generating map data.\n\nCheck you have Visual C++ installed.\nRestart your PC.");
+            panic!("{}", localisation.get_primemh("error2"));
         }
     }
 }

@@ -13,12 +13,12 @@ use winapi::um::winuser::{
 
 use crate::gui::draw_map::draw_map;
 use crate::gui::Fonts;
-use crate::localisation::localisation::{load_localisation_data, Localisation};
 use crate::mapgeneration::blacha::is_blacha_ok;
 use crate::memory::gamedata;
 use crate::memory::process::D2RWindowArea;
 use crate::settings::{Locales, MapPosition};
 use crate::types::item_filter::ItemFilters;
+use crate::LOCALISATION;
 use crate::{
     mapgeneration::{self, jsondata::SeedData},
     memory::{gamedata::GameData, process::D2RInstance},
@@ -33,6 +33,8 @@ use super::draw_presets::draw_presets;
 use super::draw_units::draw_units;
 use super::images;
 use super::util::get_attached_levels;
+
+
 
 #[notan_main]
 pub fn start_ui() -> Result<(), String> {
@@ -72,23 +74,31 @@ fn init(gfx: &mut Graphics) -> State {
     let settings: Settings = match Settings::new() {
         Ok(settings) => settings,
         Err(err) => {
-            panic!("Error reading from settings file {}", err);
+            let localisation = LOCALISATION.lock().unwrap();
+            panic!("{}\n{}", localisation.get_primemh("error5"), err)
         }
     };
     log::info!("Loaded settings file");
 
+    {
+        let mut localisation = LOCALISATION.lock().unwrap();
+        localisation.update_locale(settings.general.language.clone());
+    }
+    log::info!("Loaded localisation for {:?}", &settings.general.language);
+
     let _blacha_result = is_blacha_ok(&settings).unwrap();
-    log::info!("D2LoD test passed");
+    log::info!("D2LoD test passed, map generation ok");
 
     let images = images::load_images(gfx);
     log::info!("Loaded images");
 
     let item_filters = match ItemFilters::load() {
         Some(item_filters) => item_filters,
-        None => panic!("Error reading item filter file!"),
+        None => {
+            let localisation = LOCALISATION.lock().unwrap();
+            panic!("{}", localisation.get_primemh("error5"))
+        }
     };
-
-    
 
     let d2rprocess = D2RInstance::open_title(settings.general.title.clone());
 
@@ -114,8 +124,6 @@ fn init(gfx: &mut Graphics) -> State {
 
     log::info!("Loaded fonts");
 
-    let localisation: Localisation = load_localisation_data(&settings.general.language, &fonts);
-
     let seed_data = SeedData::default();
 
     log::info!("Started UI successfully");
@@ -128,7 +136,7 @@ fn init(gfx: &mut Graphics) -> State {
             .unwrap();
 
     let language_icon = gfx.egui_register_texture(&texture);
-    
+    let last_map_opacity = settings.visual.map_opacity.clone();    
 
     State {
         d2rprocess,
@@ -147,13 +155,13 @@ fn init(gfx: &mut Graphics) -> State {
         egui_hovering: false,
         relative_mouse_pos: (0, 0),
         launch_time: SystemTime::now(),
-        localisation,
         ui_panel_visible: true,
         ui_panel_toggle: false,
         map_overlay_visible: true,
         map_overlay_toggle: false,
         language_selector_visible: false,
-        language_icon
+        language_icon,
+        last_map_opacity,
     }
 }
 
@@ -172,13 +180,13 @@ pub(crate) struct State {
     egui_hovering: bool,
     relative_mouse_pos: (i32, i32),
     launch_time: SystemTime,
-    localisation: Localisation,
     ui_panel_visible: bool,
     ui_panel_toggle: bool,
     map_overlay_visible: bool,
     map_overlay_toggle: bool,
     language_selector_visible: bool,
     language_icon: egui::SizedTexture,
+    last_map_opacity: f32,
 }
 
 fn update(app: &mut App, state: &mut State) {
@@ -338,7 +346,7 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                 .h_align_center()
                 .v_align_top();
         } else {
-            if text_duration != 5 {
+            if text_duration.clone() != 5 {
                 log::error!("Taiwan number 1!");
             }
             //toggle map with "Page Up" button
@@ -353,7 +361,7 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                             if let Some(this_level) = state.seed_data.levels.iter_mut().find(|l| l.id == *level_id) {
                                 let scale: f32 = state.settings.visual.scale;
                                 // render map image here
-                                if this_level.level_image.map_image.is_none() {
+                                if this_level.level_image.map_image.is_none() || state.last_map_opacity != state.settings.visual.map_opacity {
                                     log::info!(
                                         "Rendering map image, seed: {}, difficulty: {:?}, level: {:?}",
                                         &game_data.seed_values.map_seed,
@@ -361,7 +369,9 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                                         &this_level.name
                                     );
                                     this_level.level_image.map_image = Some(draw_map(gfx, this_level, &state.settings));
+
                                 }
+                                
                                 if let Some(map_image) = &mut this_level.level_image.map_image {
                                     let render_scale = state.settings.general.render_scale;
                                     let window_center_x = width as f32 * 0.5 / scale * render_scale;
@@ -396,12 +406,12 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                                         &state.images,
                                         &width,
                                         &height,
-                                        &state.localisation,
                                     );
                                     draw_lines(&mut draw, this_level, game_data, &state.settings, &width, &height);
                                 }
                             }
                         });
+                        state.last_map_opacity = state.settings.visual.map_opacity.clone();
 
                         draw_units(
                             &mut draw,
@@ -410,7 +420,6 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                             &width,
                             &height,
                             &state.fonts,
-                            &state.localisation,
                         );
                         draw_objects(&mut draw, game_data, &state.settings, &width, &height, &state.images);
                         draw.mask(None);
@@ -510,9 +519,8 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
 
 fn create_language_select_ui(app: &mut App, ctx: &Context, state: &mut State) {
     setup_custom_fonts(ctx);
-    let translations = &state.localisation;
     ctx.set_pixels_per_point(app.window().dpi() as f32);
-    egui::Window::new(state.localisation.get("choose_language")).default_open(true).collapsible(false).resizable(false).fixed_size((280.0, 280.0)).show(ctx, |ui| {
+    egui::Window::new("Choose your language").default_open(true).collapsible(false).resizable(false).fixed_size((280.0, 280.0)).show(ctx, |ui| {
         ui.vertical_centered_justified(|ui| {
             let font_size = 20.0;
             if ui.button(egui::RichText::new("English").size(font_size)).clicked() { change_language(state, Locales::enUS)} 
@@ -528,15 +536,18 @@ fn create_language_select_ui(app: &mut App, ctx: &Context, state: &mut State) {
 }
 
 fn change_language(state: &mut State, locale: Locales) {
+    log::debug!("Selected new language {:?}", locale);
     state.settings.save_locale(locale);
-    let localisation: Localisation = load_localisation_data(&state.settings.general.language, &state.fonts);
-    state.localisation = localisation;
-    state.language_selector_visible = false;
+    state.language_selector_visible = false;   
 }
 
 fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
     setup_custom_fonts(ctx);
-    let translations = &state.localisation;
+    let mut localisation = LOCALISATION.lock().unwrap();
+    
+    if localisation.current_locale != state.settings.general.language {
+        localisation.update_locale(state.settings.general.language.clone());
+    }
     ctx.set_pixels_per_point(app.window().dpi() as f32);
     egui::Window::new(egui::RichText::new("PrimeMH").size(16.0)).default_open(false).show(ctx, |ui| {
         egui::Grid::new("helper_text")
@@ -547,8 +558,8 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
             ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
                 let toggle_text = format!(
                     "{}\n{}",
-                    translations.get("hide_ui"),
-                    translations.get("hide_map"),
+                    localisation.get_primemh("hide_ui"),
+                    localisation.get_primemh("hide_map"),
                 );
                 ui.label(toggle_text);
             });
@@ -566,7 +577,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
         });
         
         ui.separator();
-        egui::CollapsingHeader::new(translations.get("map_settings"))
+        egui::CollapsingHeader::new(localisation.get_primemh("map_settings"))
             .default_open(true)
             .show(ui, |ui| {
                 egui::Grid::new("settings_grid")
@@ -574,38 +585,39 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                     .spacing([20.0, 6.0])
                     .striped(true)
                     .show(ui, |ui| {
-                        ui.label(translations.get("map_scale"));
+                        ui.label(localisation.get_primemh("map_scale"));
                         ui.add(egui::Slider::new(&mut state.settings.visual.scale, 0.1..=8.0));
                         ui.end_row();
 
-                        ui.label(translations.get("map_opacity"));
+                        ui.label(localisation.get_primemh("map_opacity"));
                         ui.add(egui::Slider::new(&mut state.settings.visual.map_opacity, 0.0..=1.0));
+                        
                         ui.end_row();
 
-                        ui.label(translations.get("always_show_map"));
+                        ui.label(localisation.get_primemh("always_show_map"));
                         ui.add(egui::Checkbox::new(&mut state.settings.visual.always_show_map, ""));
                         ui.end_row();
 
-                        ui.label(translations.get("hide_map_in_menus"));
+                        ui.label(localisation.get_primemh("hide_map_in_menus"));
                         ui.add(egui::Checkbox::new(&mut state.settings.visual.hide_map_menus_open, ""));
                         ui.end_row();
 
-                        ui.label(translations.get("map_position"));
+                        ui.label(localisation.get_primemh("map_position"));
                         ui.horizontal(|ui| {
                             ui.radio_value(
                                 &mut state.settings.general.map_position,
                                 MapPosition::Center,
-                                translations.get("center"),
+                                localisation.get_primemh("center"),
                             );
                             ui.radio_value(
                                 &mut state.settings.general.map_position,
                                 MapPosition::TopLeft,
-                                translations.get("top_left"),
+                                localisation.get_primemh("top_left"),
                             );
                             ui.radio_value(
                                 &mut state.settings.general.map_position,
                                 MapPosition::TopRight,
-                                translations.get("top_right"),
+                                localisation.get_primemh("top_right"),
                             );
                         });
                         ui.end_row();
@@ -615,7 +627,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
             });
 
         ui.separator();
-        egui::CollapsingHeader::new(translations.get("map_objects"))
+        egui::CollapsingHeader::new(localisation.get_primemh("map_objects"))
             .default_open(false)
             .show(ui, |ui| {
                 egui::Grid::new("objects_grid")
@@ -623,9 +635,9 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                     .spacing([6.0, 6.0])
                     .striped(true)
                     .show(ui, |ui| {
-                        ui.label(translations.get("show_chests"));
+                        ui.label(localisation.get_primemh("show_chests"));
                         ui.add(egui::Checkbox::new(&mut state.settings.chests.enabled, ""));
-                        ui.label(translations.get("size"));
+                        ui.label(localisation.get_primemh("size"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.chests.size)
                                 .clamp_range(0.01..=1.0)
@@ -633,9 +645,9 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         );
                         ui.end_row();
 
-                        ui.label(translations.get("show_portals"));
+                        ui.label(localisation.get_primemh("show_portals"));
                         ui.add(egui::Checkbox::new(&mut state.settings.portals.enabled, ""));
-                        ui.label(translations.get("size"));
+                        ui.label(localisation.get_primemh("size"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.portals.size)
                                 .clamp_range(0.1..=8.0)
@@ -643,15 +655,15 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         );
                         ui.end_row();
 
-                        ui.label(translations.get("show_shrines"));
+                        ui.label(localisation.get_primemh("show_shrines"));
                         ui.add(egui::Checkbox::new(&mut state.settings.shrines.enabled, ""));
-                        ui.label(translations.get("size"));
+                        ui.label(localisation.get_primemh("size"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.shrines.size)
                                 .clamp_range(0.01..=1.0)
                                 .speed(0.01),
                         );
-                        ui.label(translations.get("text_size"));
+                        ui.label(localisation.get_primemh("text_size"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.shrines.text_size)
                                 .clamp_range(1.0..=20.0)
@@ -662,7 +674,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
             });
 
         ui.separator();
-        egui::CollapsingHeader::new(translations.get("monsters"))
+        egui::CollapsingHeader::new(localisation.get_primemh("monsters"))
             .default_open(false)
             .show(ui, |ui| {
                 egui::Grid::new("monsters_grid")
@@ -670,11 +682,11 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                     .spacing([20.0, 6.0])
                     .striped(true)
                     .show(ui, |ui| {
-                        ui.label(translations.get("show_immunities"));
+                        ui.label(localisation.get_primemh("show_immunities"));
                         ui.add(egui::Checkbox::new(&mut state.settings.monsters.immunities, ""));
                         ui.end_row();
 
-                        ui.label(translations.get("normal_mobs"));
+                        ui.label(localisation.get_primemh("normal_mobs"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.monsters.normal_mobs_size)
                                 .clamp_range(0.5..=10.0)
@@ -683,7 +695,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.monsters.normal_mob_color);
                         ui.end_row();
 
-                        ui.label(translations.get("minions"));
+                        ui.label(localisation.get_primemh("minions"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.monsters.minions_mobs_size)
                                 .clamp_range(0.5..=10.0)
@@ -692,7 +704,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.monsters.minions_mob_color);
                         ui.end_row();
 
-                        ui.label(translations.get("champions"));
+                        ui.label(localisation.get_primemh("champions"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.monsters.champions_mobs_size)
                                 .clamp_range(0.5..=10.0)
@@ -701,7 +713,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.monsters.champions_mob_color);
                         ui.end_row();
 
-                        ui.label(translations.get("uniques"));
+                        ui.label(localisation.get_primemh("uniques"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.monsters.unique_mobs_size)
                                 .clamp_range(0.5..=10.0)
@@ -710,7 +722,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.monsters.unique_mob_color);
                         ui.end_row();
 
-                        ui.label(translations.get("bosses"));
+                        ui.label(localisation.get_primemh("bosses"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.monsters.boss_mobs_size)
                                 .clamp_range(0.5..=10.0)
@@ -722,7 +734,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
             });
 
         ui.separator();
-        egui::CollapsingHeader::new(translations.get("lines_and_pathfinding"))
+        egui::CollapsingHeader::new(localisation.get_primemh("lines_and_pathfinding"))
             .default_open(false)
             .show(ui, |ui| {
                 egui::Grid::new("lines_grid")
@@ -730,29 +742,29 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                     .spacing([20.0, 6.0])
                     .striped(true)
                     .show(ui, |ui| {
-                        ui.label(translations.get("show_waypoint_lines"));
+                        ui.label(localisation.get_primemh("show_waypoint_lines"));
                         ui.add(egui::Checkbox::new(&mut state.settings.lines.waypoint_enabled, ""));
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.lines.waypoint_rgba);
                         ui.end_row();
 
-                        ui.label(translations.get("show_exit_lines"));
+                        ui.label(localisation.get_primemh("show_exit_lines"));
                         ui.add(egui::Checkbox::new(&mut state.settings.lines.exit_enabled, ""));
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.lines.exit_rgba);
                         ui.end_row();
 
-                        ui.label(translations.get("show_quest_lines"));
+                        ui.label(localisation.get_primemh("show_quest_lines"));
                         ui.add(egui::Checkbox::new(&mut state.settings.lines.quest_enabled, ""));
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.lines.quest_rgba);
                         ui.end_row();
 
-                        ui.label(translations.get("show_boss_lines"));
+                        ui.label(localisation.get_primemh("show_boss_lines"));
                         ui.add(egui::Checkbox::new(&mut state.settings.lines.boss_enabled, ""));
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.lines.boss_rgba);
                         ui.end_row();
                     });
             });
         ui.separator();
-        egui::CollapsingHeader::new(translations.get("item_log"))
+        egui::CollapsingHeader::new(localisation.get_primemh("item_log"))
             .default_open(false)
             .show(ui, |ui| {
                 egui::Grid::new("my_grid2")
@@ -760,18 +772,18 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                     .spacing([20.0, 6.0])
                     .striped(true)
                     .show(ui, |ui| {
-                        ui.label(translations.get("item_show_log"));
+                        ui.label(localisation.get_primemh("item_show_log"));
                         ui.add(egui::Checkbox::new(&mut state.settings.item_log.enabled, ""));
                         ui.end_row();
 
-                        ui.label(translations.get("item_log_text_size"));
+                        ui.label(localisation.get_primemh("item_log_text_size"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.item_log.text_size)
                                 .clamp_range(3.0..=60.0)
                                 .speed(0.1),
                         );
                         ui.end_row();
-                        ui.label(translations.get("item_duration"));
+                        ui.label(localisation.get_primemh("item_duration"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.item_log.text_duration)
                                 .clamp_range(0..=90)
@@ -779,36 +791,36 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         );
                         ui.end_row();
 
-                        ui.label(translations.get("item_ground_alerts"));
+                        ui.label(localisation.get_primemh("item_ground_alerts"));
                         ui.add(egui::Checkbox::new(&mut state.settings.item_log.ground_alerts, ""));
                         ui.end_row();
 
-                        ui.label(translations.get("item_ground_text_size"));
+                        ui.label(localisation.get_primemh("item_ground_text_size"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.item_log.ground_alerts_text_size)
                                 .clamp_range(3.0..=60.0)
                                 .speed(0.1),
                         );
                         ui.end_row();
-                        ui.label(translations.get("item_full_name"));
+                        ui.label(localisation.get_primemh("item_full_name"));
                         ui.add(egui::Checkbox::new(&mut state.settings.item_log.ground_alerts_show_suffix_prefix, ""));
                         ui.end_row();
 
-                        ui.label(translations.get("item_tts"));
+                        ui.label(localisation.get_primemh("item_tts"));
                         ui.add(egui::Checkbox::new(&mut state.settings.item_log.voice_enabled, ""));
                         ui.end_row();
 
-                        ui.label(translations.get("item_volume"));
+                        ui.label(localisation.get_primemh("item_volume"));
                         ui.add(egui::Slider::new(&mut state.settings.item_log.voice_volume, 0..=100));
                         ui.end_row();
 
-                        ui.label(translations.get("item_speed"));
+                        ui.label(localisation.get_primemh("item_speed"));
                         ui.add(egui::Slider::new(&mut state.settings.item_log.voice_speed, -5..=5));
                         ui.end_row();
                     });
             });
         ui.separator();
-        egui::CollapsingHeader::new(translations.get("missiles"))
+        egui::CollapsingHeader::new(localisation.get_primemh("missiles"))
             .default_open(false)
             .show(ui, |ui| {
                 egui::Grid::new("missiles_grid")
@@ -816,12 +828,12 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                     .spacing([20.0, 6.0])
                     .striped(true)
                     .show(ui, |ui| {
-                        ui.label(translations.get("show_missiles"));
+                        ui.label(localisation.get_primemh("show_missiles"));
                         ui.add(egui::Checkbox::new(&mut state.settings.missiles.enabled, ""));
                         ui.end_row();
 
                         // Fire
-                        ui.label(translations.get("fire"));
+                        ui.label(localisation.get_primemh("fire"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.missiles.fire_size)
                                 .clamp_range(0.1..=10.0)
@@ -831,7 +843,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.end_row();
 
                         // Cold
-                        ui.label(translations.get("cold"));
+                        ui.label(localisation.get_primemh("cold"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.missiles.cold_size)
                                 .clamp_range(0.1..=10.0)
@@ -841,7 +853,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.end_row();
 
                         // Poison
-                        ui.label(translations.get("poison"));
+                        ui.label(localisation.get_primemh("poison"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.missiles.poison_size)
                                 .clamp_range(0.1..=10.0)
@@ -851,7 +863,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.end_row();
 
                         // Lightning
-                        ui.label(translations.get("lightning"));
+                        ui.label(localisation.get_primemh("lightning"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.missiles.lightning_size)
                                 .clamp_range(0.1..=10.0)
@@ -861,7 +873,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.end_row();
 
                         // Physical
-                        ui.label(translations.get("physical"));
+                        ui.label(localisation.get_primemh("physical"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.missiles.physical_size)
                                 .clamp_range(0.1..=10.0)
@@ -871,7 +883,7 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                         ui.end_row();
 
                         // Magic
-                        ui.label(translations.get("magic"));
+                        ui.label(localisation.get_primemh("magic"));
                         ui.add(
                             egui::DragValue::new(&mut state.settings.missiles.magic_size)
                                 .clamp_range(0.1..=10.0)
@@ -893,17 +905,19 @@ fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
             obfstr::obfstr!("あなたがこれに対して支払った場合、あなたは詐欺されています\n"),
             obfstr::obfstr!("Если вы заплатили за это, вас обманули\n")
         );
-        ui.label(splash_text);
+        
+        ui.label(splash_text.clone());
 
         ui.separator();
         ui.horizontal(|ui| {
-            if ui.button(translations.get("quit")).clicked() {
+            if ui.button(localisation.get_primemh("quit")).clicked() {
                 app.exit();
             }
-            if ui.button(translations.get("save_settings")).clicked() {
+            if ui.button(localisation.get_primemh("save_settings")).clicked() {
                 state.settings.save();
             }
         });
+        
     });
 }
 

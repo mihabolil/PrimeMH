@@ -17,6 +17,9 @@
     },
     
     "editor.inlayHints.fontSize": 12,
+    "rust-analyzer.diagnostics.disabled": [
+      "macro-error"
+    ],
     "rust-analyzer.linkedProjects": [
         ".\\Cargo.toml"
     ],

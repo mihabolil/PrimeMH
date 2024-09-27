@@ -1,4 +1,4 @@
-use crate::ITEM_FILTER_FILE;
+use crate::{ITEM_FILTER_FILE, LOCALISATION};
 use serde::{de, Deserialize, Deserializer};
 use serde_yaml::Error;
 use std::{collections::HashMap, fs::File, str::FromStr};
@@ -13,6 +13,7 @@ pub struct ItemFilters {
 
 impl ItemFilters {
     pub fn load() -> Option<Self> {
+        let localisation = LOCALISATION.lock().unwrap();
         let mut path = std::env::current_dir().unwrap();
         path.push(ITEM_FILTER_FILE);
         if let Ok(file) = File::open(path.as_path()) {
@@ -22,11 +23,11 @@ impl ItemFilters {
                     filters: results.unwrap(),
                 });
             } else {
-                log::error!("Could not load itemfilter {:?}", results.err().unwrap());
+                log::error!("{}", format!("{}\n{}", localisation.get_primemh("error3"), results.err().unwrap()));
                 None
             }
         } else {
-            log::error!("Error opening item filter file {:?}", path);
+            log::error!("{}", format!("{}\n{:?}", localisation.get_primemh("error4"), path));
             None
         }
     }

@@ -14,6 +14,8 @@ use winapi::um::psapi::{EnumProcessModules, GetModuleBaseNameA};
 use winapi::um::winuser::{ClientToScreen, FindWindowW, GetClientRect, GetDpiForWindow, GetForegroundWindow};
 use winapi::um::{processthreadsapi::OpenProcess, winnt::PROCESS_ALL_ACCESS};
 
+use crate::LOCALISATION;
+
 #[allow(dead_code)]
 pub struct D2RInstance {
     pub handle: HANDLE,
@@ -50,7 +52,9 @@ impl D2RInstance {
         let handle: HANDLE = unsafe { OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid) };
         if handle == NULL {
             log::debug!("OpenProcess failed. Error: {:?}", std::io::Error::last_os_error());
-            panic!("Window title '{}' not found.\nIf you are running the game as admin you must run MH as admin.\nIf you have a custom window title you must specify in settings.toml\nExiting PrimeMH...", title);
+            let localisation = LOCALISATION.lock().unwrap();
+            let msg = format!("'{}' {}\n\n{}", title, localisation.get_primemh("error12"), std::io::Error::last_os_error());
+            panic!("{}", msg);
         }
         let base_address = Self::base_address(handle).unwrap();
         Self {
@@ -155,7 +159,9 @@ impl D2RInstance {
         let game = match some_game {
             Ok(s) => s,
             Err(err) => {
-                panic!("ERROR could not find game with pid {:?}, {:?}", pid, err)
+                let localisation = LOCALISATION.lock().unwrap();
+                let msg = format!("{} PID {}\n{:?}", localisation.get_primemh("error13"), pid, err);
+                panic!("{}", msg)
             },
         };
         let module = game.module("D2R.exe").unwrap();
@@ -171,7 +177,7 @@ impl D2RInstance {
         let lp_address: Result<usize, ProcMemError> = module.find_signature(&lp_signature);
         let offset_address = match lp_address {
             Ok(a) => a,
-            Err(err) => panic!("ERROR {:?}", err),
+            Err(err) => panic!("{:?}", err),
         };
         let extra_bytes_address = offset_address as isize + extra_bytes as isize;
         let offset = game.read_mem(extra_bytes_address as usize).unwrap();
@@ -245,7 +251,9 @@ impl D2RInstance {
 
     pub fn is_running(&self) -> u32 {
         if Self::match_title(self.title.clone()).eq(&0b0) {
-            panic!("{} not found\nExiting PrimeMH...", self.title.clone());
+            let localisation = LOCALISATION.lock().unwrap();
+            let msg = format!("'{}' {}",  self.title.clone(), localisation.get_primemh("error14"));
+            panic!("{}", msg);
         } else {
             Self::match_title(self.title.clone())
         }

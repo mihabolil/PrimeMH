@@ -1,2 +1,2 @@
 pub mod localisation;
-pub mod ui_text;
+pub mod localisation_file_parser;

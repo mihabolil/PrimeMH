@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use notan::draw::*;
 use notan::prelude::*;
 
-use crate::localisation::localisation::Localisation;
 use crate::mapgeneration::jsondata::LevelData;
 use crate::mapgeneration::pois::POIType;
 use crate::mapgeneration::pois::POI;
@@ -11,6 +10,7 @@ use crate::memory::gamedata::GameData;
 use crate::settings::Settings;
 use crate::types::object::GameObjectMode;
 use crate::types::object::GameObjectType;
+use crate::LOCALISATION;
 
 use super::Fonts;
 
@@ -24,8 +24,7 @@ pub fn draw_presets(
     settings: &Settings,
     images: &HashMap<String, Texture>,
     width: &f32,
-    height: &f32,
-    localisation: &Localisation
+    height: &f32
 ) {
     let player_pos = (game_data.player.pos_x, game_data.player.pos_y);
     let current_level_id = game_data.seed_values.level;
@@ -56,6 +55,7 @@ pub fn draw_presets(
                 found = true;
                 poi.label = match shrine.shrine_type {
                     Some(a) => {
+                        let localisation = LOCALISATION.lock().unwrap();
                         localisation.get_shrine(a as usize)
                     },
                     None => String::new(),
@@ -78,17 +78,17 @@ pub fn draw_presets(
                 draw_waypoint(poi, player_pos, draw, settings.visual.scale, width, height);
             }
             POIType::Shrine => {
-                draw_shrine(poi, player_pos, draw, settings, shrine_image, width, height, localisation);
+                draw_shrine(poi, player_pos, draw, settings, shrine_image, width, height, all_fonts);
             }
             POIType::Well => {
-                draw_shrine(poi, player_pos, draw, settings,well_image, width, height, localisation);
+                draw_shrine(poi, player_pos, draw, settings,well_image, width, height, all_fonts);
             }
             POIType::Chest => (),
             POIType::SuperChest => {
                 draw_super_chest(poi, player_pos, draw, settings.visual.scale, super_chest_image, width, height);
             }
             POIType::Exit => {
-                draw_exit(poi, player_pos, this_level, draw, settings.visual.scale, current_level_id, width, height, localisation);
+                draw_exit(poi, player_pos, this_level, draw, settings.visual.scale, current_level_id, width, height, all_fonts, settings);
             }
             POIType::GoodExit => {
                 draw_good_exit(poi, player_pos, this_level, draw, settings.visual.scale, width, height);
@@ -120,7 +120,8 @@ fn draw_exit(
     current_level_id: u32,
     width: &f32, 
     height: &f32,
-    localisation: &Localisation
+    all_fonts: &Fonts,
+    settings: &Settings,
 ) {
     if poi.id > 0 {
         let size = (6.0 * scale, 3.0 * scale);
@@ -129,18 +130,20 @@ fn draw_exit(
         let color = Color::from_rgb(255.0, 0.0, 255.0);
         draw_diamond(draw, poi_pos, size, color);
 
+        let localisation = LOCALISATION.lock().unwrap();
         let label: String = localisation.get_level(&poi.id);
 
         if current_level_id == this_level.id || poi.class != "walkable" {
+            let font = all_fonts.get_safe_font(&settings.general.language);
             let text_pos = (poi_pos.0 + (size.0 / 2.0), (poi_pos.1 + (size.1 / 2.0)) - (10.0 * scale));
             //TODO: Fix the text here, need to figure out how to flip or mirror it
-            draw.text(&localisation.font, &label)
+            draw.text(&font, &label)
                 .position(text_pos.0 + 2.0, text_pos.1 + 2.0)
                 .size(6.0 * scale)
                 .color(Color::BLACK)
                 .h_align_center()
                 .v_align_top();
-            draw.text(&localisation.font, &label)
+            draw.text(&font, &label)
                 .position(text_pos.0, text_pos.1)
                 .size(6.0 * scale)
                 .color(Color::WHITE)
@@ -183,7 +186,7 @@ fn draw_npc_spawn(poi: &POI, player_pos: (f32, f32), draw: &mut Draw, scale: f32
     draw.rect(poi_pos, size).color(Color::from_rgb(255.0, 0.0, 0.0));
 }
 
-fn draw_shrine(poi: &POI, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, image: &Texture, width: &f32, height: &f32, localisation: &Localisation) {
+fn draw_shrine(poi: &POI, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, image: &Texture, width: &f32, height: &f32, all_fonts: &Fonts) {
     if !settings.shrines.enabled {
         return;
     }
@@ -197,14 +200,15 @@ fn draw_shrine(poi: &POI, player_pos: (f32, f32), draw: &mut Draw, settings: &Se
         .position(poi_pos.0 + (w / 1.5), poi_pos.1 - (h / 2.0));
 
     if poi.poi_type != POIType::Well {
+        let font = all_fonts.get_safe_font(&settings.general.language);
         let text_pos = (poi_pos.0 + (w), (poi_pos.1 - (10.0 * scale)));
-        draw.text(&localisation.font, &poi.label)
+        draw.text(&font, &poi.label)
             .position(text_pos.0 + 1.5, text_pos.1 + 1.5)
             .size(settings.shrines.text_size * scale)
             .color(Color::BLACK)
             .h_align_center()
             .v_align_top();
-        draw.text(&localisation.font, &poi.label)
+        draw.text(&font, &poi.label)
             .position(text_pos.0, text_pos.1)
             .size(settings.shrines.text_size * scale)
             .color(Color::from_hex(0xFFD700FF))

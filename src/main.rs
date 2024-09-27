@@ -6,6 +6,7 @@ extern crate log;
 
 use std::{fs::File, io::Write};
 use gui::ui::start_ui;
+use localisation::localisation::Localisation;
 use logger::configure_logging;
 
 mod gui;
@@ -19,7 +20,13 @@ mod logger;
 
 pub const SETTINGS_FILE: &str = "settings.toml";
 pub const ITEM_FILTER_FILE: &str = "itemfilter.yml";
+#[macro_use]
+extern crate lazy_static;
 
+use std::sync::Mutex;
+lazy_static! {
+    pub static ref LOCALISATION: Mutex<Localisation> = Mutex::new(Localisation::new());
+}
 
 fn main() {
     

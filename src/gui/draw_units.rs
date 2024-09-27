@@ -5,9 +5,9 @@ use notan::math::Rect;
 use notan::prelude::*;
 
 
-use crate::localisation::localisation::{detect_safe_font, Localisation};
+use crate::localisation::localisation::{detect_safe_font};
 use crate::memory::{gamedata::GameData};
-use crate::settings::{Locales, Settings};
+use crate::settings::Settings;
 use crate::types::{
     missile::{MissileType, MissileUnit},
     npc::{MonsterFlag, NPC, NPCMode, NPCType, NPCUnit},
@@ -16,10 +16,11 @@ use crate::types::{
     states::State,
     stats::Immunity,
 };
+use crate::LOCALISATION;
 
 use super::Fonts;
 
-pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, width: &f32, height: &f32, fonts: &Fonts, localisation: &Localisation) {
+pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, width: &f32, height: &f32, fonts: &Fonts) {
     let player_pos = (game_data.player.pos_x, game_data.player.pos_y);
 
     // draw player dot at the centre
@@ -28,7 +29,7 @@ pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, wi
     // draw npcs
     game_data.npcs.iter().for_each(|npc| match npc.npc_type {
         NPCType::Monster => { draw_monster(npc, player_pos, draw, settings, width, height); }
-        NPCType::Town => { draw_town_npc(npc, player_pos, draw, settings, fonts, width, height, localisation); }
+        NPCType::Town => { draw_town_npc(npc, player_pos, draw, settings, fonts, width, height); }
         NPCType::Pet => { draw_pet(npc, player_pos, draw, settings.visual.scale, width, height);}
         _ => (),
     });
@@ -36,7 +37,7 @@ pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, wi
     // draw bosses separately to ensure they draw on top
     game_data.npcs.iter().for_each(|npc| {
         if let NPCType::Boss = npc.npc_type {
-            draw_boss(npc, player_pos, draw, settings, fonts, width, height, localisation);
+            draw_boss(npc, player_pos, draw, settings, fonts, width, height);
         }
     });
 
@@ -197,28 +198,11 @@ fn draw_other_player(
 
     draw_cross(other_player_pos, size.0 * scale, color, 0.4 * scale, draw);
 
-    
-    // let utf16: Vec<u16> = player_name.encode_utf16().collect();
-
-    // // Convert UTF-16 back to a Rust string
-    // let player_name_utf16 = match String::from_utf16(&utf16) {
-    //     Ok(s) => {
-    //         log::debug!("player name {:?}", s);
-    //         s
-    //     },
-    //     Err(err) => {
-    //         log::debug!("player name {:?}", err);
-    //         String::new()
-    //     }
-    // };
-    
-
     match detect_safe_font(player_name.clone(), all_fonts) {
         Some(font) => {
             
             // there is a bug drawing non-english chars, it doesn't seem to be encoding though
             let text_pos = (other_player_pos.0, (other_player_pos.1 - (7.0 * scale)));
-            log::debug!("player name {:?}", player_name);
             draw.text(&font, player_name)
                 .position(text_pos.0 + 1.5, text_pos.1 + 1.5)
                 .size(5.0 * scale)
@@ -236,7 +220,7 @@ fn draw_other_player(
     };
 }
 
-fn draw_town_npc(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, fonts: &Fonts,  width: &f32, height: &f32, localisation: &Localisation) {
+fn draw_town_npc(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, all_fonts: &Fonts,  width: &f32, height: &f32) {
     let scale = settings.visual.scale;
     let size = (1.8, 0.5);
     let unit_pos = (npc.pos_x, npc.pos_y);
@@ -244,12 +228,13 @@ fn draw_town_npc(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, setting
     let color = Color::WHITE;
     draw_cross(npc_pos, size.0 * scale, color, 0.4 * scale, draw);
     
+    let localisation = LOCALISATION.lock().unwrap();
     let npc_name = format!("{:?}", npc.txt_file_no);
     let npc_label: String = localisation.get_npc_name(&npc_name);
-    draw_npc_name(npc_pos, size.1, &npc_label, draw, settings, scale, fonts);
+    draw_npc_name(npc_pos, size.1, &npc_label, draw, settings, scale, all_fonts);
 }
 
-fn draw_boss(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, fonts: &Fonts, width: &f32, height: &f32, localisation: &Localisation) {
+fn draw_boss(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, all_fonts: &Fonts, width: &f32, height: &f32) {
     if npc.mode != NPCMode::Dead && npc.mode != NPCMode::Death {
         let scale = settings.visual.scale;
         let boss_color: Color = convert_color(settings.monsters.boss_mob_color);
@@ -260,10 +245,12 @@ fn draw_boss(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &
 
         match npc.get_health() {
             Some((health, max_health)) => {
+                let localisation = LOCALISATION.lock().unwrap();
+                let font = all_fonts.get_safe_font(&settings.general.language);
                 let hp_percent = health as f32 / max_health as f32;
                 let boss_text: String = format!("{:?}", npc.txt_file_no);
                 let npc_label: String = localisation.get_npc_name(&boss_text);
-                draw_health_bar(npc_pos, size.1, hp_percent, npc_label, draw, settings, &localisation.font);
+                draw_health_bar(npc_pos, size.1, hp_percent, npc_label, draw, settings, font);
             },
             None => (),
         }
@@ -277,17 +264,13 @@ fn draw_npc_name(
     draw: &mut Draw,
     settings: &Settings,
     scale: f32,
-    fonts: &Fonts, 
+    all_fonts: &Fonts, 
 ) {
     let font_size = 4.5;
     let npc_name_pos = (npc_pos.0, npc_pos.1 - ((size + 1.0) * scale * 3.2));
-    let font_to_use = match settings.general.language {
-        Locales::koKR => fonts.korean_font,
-        Locales::zhTW => fonts.taiwan_font,
-        _ => fonts.formal_font,
-    };
+    let font = all_fonts.get_safe_font_formal(&settings.general.language);
 
-    draw.text(&font_to_use, &text)
+    draw.text(&font, &text)
         .position(npc_name_pos.0, npc_name_pos.1)
         .size(font_size * scale)
         .color(Color::TRANSPARENT)
@@ -303,13 +286,13 @@ fn draw_npc_name(
     )
     .color(Color::from_hex(0x00000088));
 
-    draw.text(&font_to_use, &text)
+    draw.text(&font, &text)
         .position(npc_name_pos.0 + 1.0, npc_name_pos.1 + 1.0)
         .size(font_size * scale)
         .color(Color::BLACK)
         .h_align_center()
         .v_align_middle();
-    draw.text(&font_to_use, &text)
+    draw.text(&font, &text)
         .position(npc_name_pos.0, npc_name_pos.1)
         .size(font_size * scale)
         .color(Color::from_hex(0xc6b276FF))
