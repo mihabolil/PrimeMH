@@ -11,9 +11,9 @@ pub mod ui;
 mod util;
 
 pub struct Fonts {
-    exocet_font: Font,
-    formal_font: Font,
-    korean_font: Font,
-    taiwan_font: Font,
-    blizzard_font: Font,
+    pub exocet_font: Font,
+    pub formal_font: Font,
+    pub korean_font: Font,
+    pub taiwan_font: Font,
+    pub blizzard_font: Font,
 }

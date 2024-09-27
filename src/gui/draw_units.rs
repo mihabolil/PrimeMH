@@ -243,7 +243,7 @@ fn draw_boss(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &
                 let hp_percent = health as f32 / max_health as f32;
                 let boss_text: String = format!("{:?}", npc.txt_file_no);
                 let npc_label: String = localisation.get_npc_name(&boss_text);
-                draw_health_bar(npc_pos, size.1, hp_percent, npc_label, draw, settings, &fonts.exocet_font);
+                draw_health_bar(npc_pos, size.1, hp_percent, npc_label, draw, settings, &localisation.font);
             },
             None => (),
         }
@@ -304,14 +304,14 @@ fn draw_health_bar(
     text: String,
     draw: &mut Draw,
     settings: &Settings,
-    exocet_font: &Font
+    font: &Font
 ) {
     let font_size = 4.5;
     // draw boss health bar
     let scale = settings.visual.scale;
     let health_bar_pos = (npc_pos.0, npc_pos.1 - (size * scale));
 
-    draw.text(exocet_font, &text)
+    draw.text(font, &text)
         .position(health_bar_pos.0, health_bar_pos.1)
         .size(font_size * scale)
         .color(Color::TRANSPARENT)
@@ -332,13 +332,13 @@ fn draw_health_bar(
     )
     .color(Color::from_hex(0xaa000088));
 
-    draw.text(exocet_font, &text)
+    draw.text(font, &text)
         .position(health_bar_pos.0 + 1.0, health_bar_pos.1 + 1.0)
         .size(font_size * scale)
         .color(Color::BLACK)
         .h_align_center()
         .v_align_middle();
-    draw.text(exocet_font, &text)
+    draw.text(font, &text)
         .position(health_bar_pos.0, health_bar_pos.1)
         .size(font_size * scale)
         .color(Color::from_hex(0xD4AF37FF))

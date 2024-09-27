@@ -88,12 +88,12 @@ fn init(gfx: &mut Graphics) -> State {
         None => panic!("Error reading item filter file!"),
     };
 
-    let localisation: Localisation = load_localisation_data(&settings.general.language);
+    
 
     let d2rprocess = D2RInstance::open_title(settings.general.title.clone());
 
     let exocet_font = gfx.create_font(include_bytes!("./fonts/exocet.otf")).expect("Could not load exocet font!");
-    let formal_font = gfx.create_font(include_bytes!("./fonts/formal.otf")).expect("Could not load formal font!");;
+    let formal_font = gfx.create_font(include_bytes!("./fonts/formal.otf")).expect("Could not load formal font!");
     let korean_font = gfx
         .create_font(include_bytes!("./fonts/NotoSansCJKkr-Regular.otf"))
         .expect("Could not load korean_font font!");
@@ -113,6 +113,8 @@ fn init(gfx: &mut Graphics) -> State {
     };
 
     log::info!("Loaded fonts");
+
+    let localisation: Localisation = load_localisation_data(&settings.general.language, &fonts);
 
     let seed_data = SeedData::default();
 
@@ -388,7 +390,7 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                                     draw_presets(
                                         &mut draw,
                                         this_level,
-                                        &state.fonts.exocet_font,
+                                        &state.fonts,
                                         game_data,
                                         &state.settings,
                                         &state.images,
@@ -527,7 +529,7 @@ fn create_language_select_ui(app: &mut App, ctx: &Context, state: &mut State) {
 
 fn change_language(state: &mut State, locale: Locales) {
     state.settings.save_locale(locale);
-    let localisation: Localisation = load_localisation_data(&state.settings.general.language);
+    let localisation: Localisation = load_localisation_data(&state.settings.general.language, &state.fonts);
     state.localisation = localisation;
     state.language_selector_visible = false;
 }

@@ -12,12 +12,14 @@ use crate::settings::Settings;
 use crate::types::object::GameObjectMode;
 use crate::types::object::GameObjectType;
 
+use super::Fonts;
+
 // this will draw the preset POI data from the generated map data
 // this includes waypoints, exits, certain shrines, super chests, NPC spawn locations
 pub fn draw_presets(
     draw: &mut Draw,
     this_level: &mut LevelData,
-    exocet_font: &Font,
+    all_fonts: &Fonts,
     game_data: &GameData,
     settings: &Settings,
     images: &HashMap<String, Texture>,
@@ -74,17 +76,17 @@ pub fn draw_presets(
                 draw_waypoint(poi, player_pos, draw, settings.visual.scale, width, height);
             }
             POIType::Shrine => {
-                draw_shrine(poi, player_pos, draw, settings, exocet_font, shrine_image, width, height);
+                draw_shrine(poi, player_pos, draw, settings, &all_fonts.exocet_font, shrine_image, width, height);
             }
             POIType::Well => {
-                draw_shrine(poi, player_pos, draw, settings, exocet_font, well_image, width, height);
+                draw_shrine(poi, player_pos, draw, settings, &all_fonts.exocet_font, well_image, width, height);
             }
             POIType::Chest => (),
             POIType::SuperChest => {
                 draw_super_chest(poi, player_pos, draw, settings.visual.scale, super_chest_image, width, height);
             }
             POIType::Exit => {
-                draw_exit(poi, player_pos, this_level, draw, exocet_font, settings.visual.scale, current_level_id, width, height, localisation);
+                draw_exit(poi, player_pos, this_level, draw, &all_fonts, settings.visual.scale, current_level_id, width, height, localisation);
             }
             POIType::GoodExit => {
                 draw_good_exit(poi, player_pos, this_level, draw, settings.visual.scale, width, height);
@@ -112,7 +114,7 @@ fn draw_exit(
     player_pos: (f32, f32),
     this_level: &LevelData,
     draw: &mut Draw,
-    font: &Font,
+    all_fonts: &Fonts,
     scale: f32,
     current_level_id: u32,
     width: &f32, 
@@ -126,18 +128,18 @@ fn draw_exit(
         let color = Color::from_rgb(255.0, 0.0, 255.0);
         draw_diamond(draw, poi_pos, size, color);
 
-        let label: String = localisation.get_level(&poi.label);
+        let label: String = localisation.get_level(&poi.id);
 
         if current_level_id == this_level.id || poi.class != "walkable" {
             let text_pos = (poi_pos.0 + (size.0 / 2.0), (poi_pos.1 + (size.1 / 2.0)) - (10.0 * scale));
             //TODO: Fix the text here, need to figure out how to flip or mirror it
-            draw.text(font, &label)
+            draw.text(&localisation.font, &label)
                 .position(text_pos.0 + 2.0, text_pos.1 + 2.0)
                 .size(6.0 * scale)
                 .color(Color::BLACK)
                 .h_align_center()
                 .v_align_top();
-            draw.text(font, &label)
+            draw.text(&localisation.font, &label)
                 .position(text_pos.0, text_pos.1)
                 .size(6.0 * scale)
                 .color(Color::WHITE)
