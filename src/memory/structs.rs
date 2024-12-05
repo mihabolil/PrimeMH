@@ -104,10 +104,10 @@ pub struct StatsList {
     _dummy: [u8; 48],
     pub stat_ptr: u64,
     pub stat_count: u32,
-    #[derivative(Default(value = "[0; 78]"))]
-    _dummy2: [u8; 78],
-    pub stat_ex_ptr: u64,  // 0x88
-    pub stat_ex_count: u32, // 0x90
+    #[derivative(Default(value = "[0; 108]"))]
+    _dummy2: [u8; 108],
+    pub stat_ex_ptr: u64,  // 0xA8
+    pub stat_ex_count: u32, // 0xB0
     #[derivative(Default(value = "[0; 2620]"))]
     _dummy3: [u8; 2620],
     pub state_flags: [u32; 6],  //0xAC8
