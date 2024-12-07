@@ -93,3 +93,4 @@ boss_mob_color = [255, 0, 0, 255]
 [hotkeys]
 hotkey_toggle_map = "PageDown"
 hotkey_toggle_menu = "Home"
+hotkey_exit = "^End"

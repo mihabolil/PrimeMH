@@ -1,6 +1,8 @@
 use device_query::Keycode;
+use serde::Deserialize;
 use std::fmt;
 use std::str::FromStr;
+use serde::{de, Deserializer, Serialize, Serializer};
 
 #[allow(unused)]
 #[derive(Debug, Clone)]
@@ -13,6 +15,10 @@ pub struct HotKey {
 }
 
 impl HotKey {
+    pub fn new(key: Keycode, ctrl: bool) -> Self {
+        Self { alt: false, ctrl: ctrl, shift: false, win: false, key }
+    }
+
     pub fn pressed(self, keys: &Vec<Keycode>) -> bool {
         if self.alt {
             if !keys.contains(&Keycode::LAlt) && !keys.contains(&Keycode::RAlt) {
@@ -35,6 +41,20 @@ impl HotKey {
             }
         }
         if keys.contains(&self.key) {
+            // let mut asdf: Vec<&str> = vec![];
+            // if self.alt {
+            //     asdf.push("!");
+            // }
+            // if self.ctrl {
+            //     asdf.push("^");
+            // }
+            // if self.shift {
+            //     asdf.push("+");
+            // }
+            // if self.win {
+            //     asdf.push("#");
+            // }
+            // log::debug!("Pressed {}{:?}", asdf.join(""), &self.key);
             return true
         }
         false
@@ -78,5 +98,36 @@ impl fmt::Display for HotKey {
             if self.win { "#" } else { "" },
             self.key
         )
+    }
+}
+
+
+impl<'de> Deserialize<'de> for HotKey {
+    fn deserialize<D>(deserializer: D) -> Result<HotKey, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s: String = Deserialize::deserialize(deserializer)?;
+        HotKey::from_str(&s).map_err(|_| de::Error::custom(format!("{}", "Invalid hotkey")))
+    }
+}
+
+impl Serialize for HotKey {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // Create a string representation of the HotKey
+        let hotkey_str = format!(
+            "{}{}{}{}{:?}",
+            if self.alt { "!" } else { "" },
+            if self.ctrl { "^" } else { "" },
+            if self.shift { "+" } else { "" },
+            if self.win { "#" } else { "" },
+            self.key
+        );
+        
+        // Serialize the string
+        serializer.serialize_str(&hotkey_str)
     }
 }

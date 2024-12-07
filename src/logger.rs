@@ -10,7 +10,7 @@ pub fn configure_logging() {
     // intercept panics and log an error for them
     std::panic::set_hook(Box::new(|panic_info| {
         let msg = format!("{}", panic_info);
-        log::error!("ERROR: {}", msg.replace("C:\\Users\\mjg99","").replace("mjg99",""));
+        log::error!("ERROR: {}", msg.replace("C:\\Users\\mjg99","").replace("mjg99","").replace("panicked at", ""));
     }));
 
     Builder::new()
@@ -28,7 +28,8 @@ pub fn configure_logging() {
 
             if record.level() == log::Level::Error {
                 let msg: String = format!("{}", &record.args());
-                msgbox::create("D2R PrimeMH", &msg, IconType::Error).unwrap();
+                let title = format!("D2R PrimeMH {}", env!("CARGO_PKG_VERSION"));
+                msgbox::create(title.as_str(), &msg, IconType::Error).unwrap();
             };
 
             path_style.set_color(Color::Rgb(128, 128, 128));

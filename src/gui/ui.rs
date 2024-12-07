@@ -232,6 +232,10 @@ fn update(app: &mut App, state: &mut State) {
             state.map_overlay_toggle = false
         }
 
+        if state.settings.hotkeys.hotkey_exit.clone().pressed(&keys) {
+            std::process::exit(0);
+        }
+
     }
     
     if let Some(game_data) = GameData::read_game_memory(&state.d2rprocess) {
@@ -250,6 +254,9 @@ fn update(app: &mut App, state: &mut State) {
         state.last_seed = game_data.seed_values.map_seed;
         state.game_data = Some(game_data);
     } else {
+        if state.game_data.is_some() {
+            log::debug!("Game data not found, in menu");
+        }
         state.game_data = None;
     }
 
@@ -391,111 +398,112 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
         } else {
             if text_duration.clone() != 5 {
                 log::error!("Taiwan number 1!");
-            }
-            //toggle map with "Page Up" button
-            if state.map_overlay_visible{
-                // in game
-                if let Some(game_data) = &state.game_data {
-                    if (game_data.menus.automap_visible || state.settings.visual.always_show_map)
-                        && !(state.settings.visual.hide_map_menus_open && game_data.menus.is_panel_open())
-                    {
-                        let stitched_levels = get_attached_levels(&game_data.seed_values.level);
-                        stitched_levels.iter().for_each(|level_id| {
-                            if let Some(this_level) = state.seed_data.levels.iter_mut().find(|l| l.id == *level_id) {
-                                let scale: f32 = state.settings.visual.scale;
-                                // render map image here
-                                if this_level.level_image.map_image.is_none() || state.last_map_opacity != state.settings.visual.map_opacity {
-                                    log::info!(
-                                        "Rendering map image, seed: {}, difficulty: {:?}, level: {:?}",
-                                        &game_data.seed_values.map_seed,
-                                        &game_data.seed_values.difficulty,
-                                        &this_level.name
-                                    );
-                                    this_level.level_image.map_image = Some(draw_map(gfx, this_level, &state.settings));
-
-                                }
-                                
-                                if let Some(map_image) = &mut this_level.level_image.map_image {
-                                    let render_scale = state.settings.general.render_scale;
-                                    let window_center_x = width as f32 * 0.5 / scale * render_scale;
-                                    let window_center_y = height as f32 * 0.5 / (scale / 2.0 / render_scale);
-
-                                    let map_position_x = ((this_level.offset.x as f32 - game_data.player.pos_x)
-                                        * render_scale)
-                                        + window_center_x;
-                                    let map_position_y = ((this_level.offset.y as f32 - game_data.player.pos_y)
-                                        * render_scale)
-                                        + window_center_y;
-
-                                    let player_pos_x = (game_data.player.pos_x - this_level.offset.x as f32) * render_scale;
-                                    let player_pos_y = (game_data.player.pos_y - this_level.offset.y as f32) * render_scale;
-                                    let scale_matrix =
-                                        Mat3::from_scale(Vec2::from([scale / render_scale, scale / 2.0 / render_scale]));
-                                    draw.transform().push(scale_matrix);
-                                    draw.image(map_image)
-                                        .translate(map_position_x, map_position_y)
-                                        .rotate_degrees_from(
-                                            (map_position_x + player_pos_x, map_position_y + player_pos_y),
-                                            45.0,
+            } else {
+                //toggle map with "Page Up" button
+                if state.map_overlay_visible {
+                    // in game
+                    if let Some(game_data) = &state.game_data {
+                        if (game_data.menus.automap_visible || state.settings.visual.always_show_map)
+                            && !(state.settings.visual.hide_map_menus_open && game_data.menus.is_panel_open())
+                        {
+                            let stitched_levels = get_attached_levels(&game_data.seed_values.level);
+                            stitched_levels.iter().for_each(|level_id| {
+                                if let Some(this_level) = state.seed_data.levels.iter_mut().find(|l| l.id == *level_id) {
+                                    let scale: f32 = state.settings.visual.scale;
+                                    // render map image here
+                                    if this_level.level_image.map_image.is_none() || state.last_map_opacity != state.settings.visual.map_opacity {
+                                        log::info!(
+                                            "Rendering map image, seed: {}, difficulty: {:?}, level: {:?}",
+                                            &game_data.seed_values.map_seed,
+                                            &game_data.seed_values.difficulty,
+                                            &this_level.name
                                         );
+                                        this_level.level_image.map_image = Some(draw_map(gfx, this_level, &state.settings));
 
-                                    draw.transform().pop();
-                                    draw_presets(
-                                        &mut draw,
-                                        this_level,
-                                        &state.fonts,
-                                        game_data,
-                                        &state.settings,
-                                        &state.images,
-                                        &width,
-                                        &height,
-                                    );
-                                    draw_lines(&mut draw, this_level, game_data, &state.settings, &width, &height);
+                                    }
+                                    
+                                    if let Some(map_image) = &mut this_level.level_image.map_image {
+                                        let render_scale = state.settings.general.render_scale;
+                                        let window_center_x = width as f32 * 0.5 / scale * render_scale;
+                                        let window_center_y = height as f32 * 0.5 / (scale / 2.0 / render_scale);
+
+                                        let map_position_x = ((this_level.offset.x as f32 - game_data.player.pos_x)
+                                            * render_scale)
+                                            + window_center_x;
+                                        let map_position_y = ((this_level.offset.y as f32 - game_data.player.pos_y)
+                                            * render_scale)
+                                            + window_center_y;
+
+                                        let player_pos_x = (game_data.player.pos_x - this_level.offset.x as f32) * render_scale;
+                                        let player_pos_y = (game_data.player.pos_y - this_level.offset.y as f32) * render_scale;
+                                        let scale_matrix =
+                                            Mat3::from_scale(Vec2::from([scale / render_scale, scale / 2.0 / render_scale]));
+                                        draw.transform().push(scale_matrix);
+                                        draw.image(map_image)
+                                            .translate(map_position_x, map_position_y)
+                                            .rotate_degrees_from(
+                                                (map_position_x + player_pos_x, map_position_y + player_pos_y),
+                                                45.0,
+                                            );
+
+                                        draw.transform().pop();
+                                        draw_presets(
+                                            &mut draw,
+                                            this_level,
+                                            &state.fonts,
+                                            game_data,
+                                            &state.settings,
+                                            &state.images,
+                                            &width,
+                                            &height,
+                                        );
+                                        draw_lines(&mut draw, this_level, game_data, &state.settings, &width, &height);
+                                    }
                                 }
+                            });
+                            state.last_map_opacity = state.settings.visual.map_opacity.clone();
+
+                            draw_units(
+                                &mut draw,
+                                game_data,
+                                &state.settings,
+                                &width,
+                                &height,
+                                &state.fonts,
+                            );
+                            draw_objects(&mut draw, game_data, &state.settings, &width, &height, &state.images);
+                            draw.mask(None);
+
+                            draw_item_log(
+                                &mut draw,
+                                game_data,
+                                &state.settings,
+                                &width,
+                                &height,
+                                &state.fonts.exocet_font,
+                                state.item_frame,
+                                &state.item_filters,
+                            );
+
+                            state.item_frame += 1;
+                            if state.item_frame > 20 {
+                                state.item_frame = 0;
                             }
-                        });
-                        state.last_map_opacity = state.settings.visual.map_opacity.clone();
-
-                        draw_units(
-                            &mut draw,
-                            game_data,
-                            &state.settings,
-                            &width,
-                            &height,
-                            &state.fonts,
-                        );
-                        draw_objects(&mut draw, game_data, &state.settings, &width, &height, &state.images);
-                        draw.mask(None);
-
-                        draw_item_log(
-                            &mut draw,
-                            game_data,
-                            &state.settings,
-                            &width,
-                            &height,
-                            &state.fonts.exocet_font,
-                            state.item_frame,
-                            &state.item_filters,
-                        );
-
-                        state.item_frame += 1;
-                        if state.item_frame > 20 {
-                            state.item_frame = 0;
                         }
-                    }
-                } else {
-                    // in game menus
+                    } else {
+                        // in game menus
 
-                    let last_game_name = gamedata::get_last_game_name(&state.d2rprocess);
+                        let last_game_name = gamedata::get_last_game_name(&state.d2rprocess);
 
-                    if last_game_name.len() > 0 {
-                        let last_game = format!("Last Game: {}", last_game_name);
-                        draw.text(&state.fonts.exocet_font, &last_game)
-                            .position(app.window().width() as f32 * 0.75, 10.0)
-                            .size(16.0)
-                            .color(Color::from_hex(0xC6B276FF))
-                            .h_align_center()
-                            .v_align_top();
+                        if last_game_name.len() > 0 {
+                            let last_game = format!("Last Game: {}", last_game_name);
+                            draw.text(&state.fonts.exocet_font, &last_game)
+                                .position(app.window().width() as f32 * 0.75, 10.0)
+                                .size(16.0)
+                                .color(Color::from_hex(0xC6B276FF))
+                                .h_align_center()
+                                .v_align_top();
+                        }
                     }
                 }
             }

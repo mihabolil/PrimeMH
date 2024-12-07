@@ -52,21 +52,24 @@ pub struct Unit {
     _dummy4: [u8; 72],
     pub p_stats_list_ex: u64,
     pub p_inventory: u64,
-    #[derivative(Default(value = "[0; 64]"))]
-    _dummy5: [u8; 64],
-    pub unk_sort_stashes_by: u32,
-    #[derivative(Default(value = "[0; 36]"))]
-    _dummy6: [u8; 36],
+    #[derivative(Default(value = "[0; 16]"))]
+    _dummy5: [u8; 16],        //0x0098
+    _dummy6: usize,               //0x00A8
+    #[derivative(Default(value = "[0; 40]"))]
+    _dummy7: [u8; 40],        //0x00B0
+    pub unk_sort_stashes_by: u32,  //0x00D8
+    #[derivative(Default(value = "[0; 40]"))]
+    _dummy8: [u8; 40],
     pub p_skills: u64,
     #[derivative(Default(value = "[0; 72]"))]
-    _dummy7: [u8; 72],
+    _dummy9: [u8; 72],
     pub p_next: u64,
     pub p_room_next: u64,
     #[derivative(Default(value = "[0; 20]"))]
-    _dummy8: [u8; 20],
+    _dummy10: [u8; 20],
     pub player_class: u32, //0x174
     #[derivative(Default(value = "[0; 46]"))]
-    _dummy9: [u8; 46],
+    _dummy11: [u8; 46],
     pub is_corpse: u8, //0x1A6
 }
 

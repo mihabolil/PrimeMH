@@ -1,7 +1,8 @@
 #![allow(non_camel_case_types)]
 use config::{Config, ConfigError, File};
+use device_query::Keycode;
 use crate::gui::hotkeys::HotKey;
-use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize};
 use strum::EnumString;
 use std::{env, fs, path::PathBuf};
 use locale_config::Locale;
@@ -142,41 +143,26 @@ pub struct Monsters {
 #[derive(Debug, Serialize, Deserialize)]
 #[allow(unused)]
 pub struct HotKeys {
-    // #[serde(deserialize_with = "deserialize_hotkey")]
+    #[serde(default = "default_pagedown_hotkey")]
     pub hotkey_toggle_map: HotKey,
-    // #[serde(deserialize_with = "deserialize_hotkey")]
+    #[serde(default = "default_home_hotkey")]
     pub hotkey_toggle_menu: HotKey,
+    #[serde(default = "default_exit_hotkey")]
+    pub hotkey_exit: HotKey,
 }
 
-impl<'de> Deserialize<'de> for HotKey {
-    fn deserialize<D>(deserializer: D) -> Result<HotKey, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let s: String = Deserialize::deserialize(deserializer)?;
-        HotKey::from_str(&s).map_err(|_| de::Error::custom(format!("{}", "Invalid hotkey")))
-    }
+fn default_pagedown_hotkey() -> HotKey {
+    HotKey::new(Keycode::PageDown, false)
 }
 
-impl Serialize for HotKey {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        // Create a string representation of the HotKey
-        let hotkey_str = format!(
-            "{}{}{}{}{:?}",
-            if self.alt { "!" } else { "" },
-            if self.ctrl { "^" } else { "" },
-            if self.shift { "+" } else { "" },
-            if self.win { "#" } else { "" },
-            self.key
-        );
-        
-        // Serialize the string
-        serializer.serialize_str(&hotkey_str)
-    }
+fn default_home_hotkey() -> HotKey {
+    HotKey::new(Keycode::Home, false)
 }
+
+fn default_exit_hotkey() -> HotKey {
+    HotKey::new(Keycode::End, true)
+}
+
 
 #[derive(Debug, Serialize, Deserialize)]
 #[allow(unused)]
@@ -226,7 +212,12 @@ pub struct Settings {
     pub shrines: Shrines,
     pub lines: Lines,
     pub monsters: Monsters,
+    #[serde(default = "default_hotkeys")]
     pub hotkeys: HotKeys,
+}
+
+fn default_hotkeys() -> HotKeys {
+    HotKeys { hotkey_toggle_map: default_pagedown_hotkey(), hotkey_toggle_menu: default_home_hotkey(), hotkey_exit: default_exit_hotkey() }
 }
 
 impl Settings {
