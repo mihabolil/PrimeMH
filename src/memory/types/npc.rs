@@ -9,7 +9,7 @@ use crate::memory::{
     structs::{MonsterData, Path, StatsList, Unit},
 };
 
-use super::{stats::{Immunity, Stat, StatEnum, read_stats}, states::{self, State}};
+use super::{enchants::{get_monster_enchants, MonsterEnchants}, states::{self, State}, stats::{read_stats, Immunity, Stat, StatEnum}};
 
 #[allow(dead_code)]
 #[derive(Derivative, Debug, Clone)]
@@ -25,6 +25,7 @@ pub struct NPCUnit {
     pub p_path: u64,
     pub npc_type: NPCType,
     pub monster_flag: MonsterFlag,
+    pub monster_enchants: Vec<MonsterEnchants>,
     pub monster_stats: Vec<Stat>,
 }
 
@@ -42,6 +43,7 @@ impl NPCUnit {
         let monster_flag: MonsterFlag = Self::get_monster_data(d2rprocess, unit);
         let states = Self::get_states(d2rprocess, unit);
         let monster_stats = Self::get_monster_stats(d2rprocess, unit);
+        let monster_enchants = Self::get_monster_enchants(d2rprocess, unit);
 
         let npc_type = get_type(&txt_file_no);
         NPCUnit {
@@ -54,6 +56,7 @@ impl NPCUnit {
             p_path: unit.p_path,
             npc_type,
             monster_flag,
+            monster_enchants,
             monster_stats,
         }
     }
@@ -89,6 +92,15 @@ impl NPCUnit {
                 16 => MonsterFlag::Minion,
                 _ => MonsterFlag::None,
             }
+        }
+    }
+
+    pub fn get_monster_enchants(d2rprocess: &D2RInstance, unit: Unit) -> Vec<MonsterEnchants> {
+        if unit.p_unit_data == 0 {
+            return vec![]
+        } else {
+            let npc_data: MonsterData = d2rprocess.read_mem::<MonsterData>(unit.p_unit_data);
+            return get_monster_enchants(&npc_data);
         }
     }
 

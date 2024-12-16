@@ -5,9 +5,10 @@ use notan::math::Rect;
 use notan::prelude::*;
 
 
-use crate::localisation::localisation::{detect_safe_font};
-use crate::memory::{gamedata::GameData};
+use crate::localisation::localisation::detect_safe_font;
+use crate::memory::gamedata::GameData;
 use crate::settings::Settings;
+use crate::types::enchants::MonsterEnchants;
 use crate::types::{
     missile::{MissileType, MissileUnit},
     npc::{MonsterFlag, NPC, NPCMode, NPCType, NPCUnit},
@@ -29,7 +30,7 @@ pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, wi
 
     // draw npcs
     game_data.npcs.iter().for_each(|npc| match npc.npc_type {
-        NPCType::Monster => { draw_monster(npc, player_pos, draw, settings, width, height); }
+        NPCType::Monster => { draw_monster(npc, player_pos, draw, settings, width, height, fonts); }
         NPCType::Town => { draw_town_npc(npc, player_pos, draw, settings, fonts, width, height); }
         NPCType::Pet => { draw_pet(npc, player_pos, draw, settings.visual.scale, width, height);}
         _ => (),
@@ -120,7 +121,7 @@ fn is_hostile(roster_players: &Vec<RosterItem>, player_unit_id: u32) -> Vec<u32>
     return hostile_unit_ids;
 }
 
-fn draw_monster(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, width: &f32, height: &f32) {
+fn draw_monster(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, width: &f32, height: &f32, all_fonts: &Fonts) {
     if !(npc.mode != NPCMode::Dead && npc.mode != NPCMode::Death) | npc.states.contains(&State::Revive) {
         return;
     }
@@ -165,6 +166,50 @@ fn draw_monster(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings
     } else {
         draw_monster_with_immunities(draw, immunities, npc_pos, size, mob_color);
     }
+    draw_monster_enchants(draw, &npc.monster_enchants, npc_pos, size.0 * 1.5, all_fonts);
+}
+
+fn draw_monster_enchants(
+    draw: &mut Draw,
+    enchants: &Vec<MonsterEnchants>,
+    npc_pos: (f32, f32),
+    size: f32,
+    all_fonts: &Fonts
+) {
+    
+    if enchants.contains(&MonsterEnchants::Cursed) {
+        // let x = npc_pos.0;
+        // let y = npc_pos.1;
+        // let scale_x = size / 12.0;
+        // let scale_y = scale_x / 2.0;
+    
+        // draw.path()
+        //     .move_to(x, y)
+        //     .move_to((13.666 * scale_x) + x, (-6.0 * scale_y)+y)
+        //     .line_to((-9.5 * scale_x) + x, (10.0 * scale_y)+y)
+        //     .line_to((0.0 * scale_x) + x, (-16.0 * scale_y)+y)
+        //     .line_to((9.7 * scale_x) + x, (10.0 * scale_y)+y)
+        //     .line_to((-13.666 * scale_x) + x, (-6.0 * scale_y)+y)
+        //     .line_to((13.666 * scale_x) + x, (-6.0 * scale_y)+y)
+            
+    
+        //     .color(Color::BLACK)
+        //     .stroke(2.0);
+        let text_pos = (npc_pos.0, (npc_pos.1 - (size*1.5)));
+        draw.text(&all_fonts.blizzard_font, "C")
+            .position(text_pos.0 + 1.0, text_pos.1 + 1.0)
+            .size(size)
+            .color(Color::BLACK)
+            .h_align_center()
+            .v_align_top();
+        draw.text(&all_fonts.blizzard_font, "C")
+            .position(text_pos.0, text_pos.1)
+            .size(size)
+            .color(Color::from_rgb(212.0,175.0,55.0))
+            .h_align_center()
+            .v_align_top();
+    }
+    
 }
 
 fn draw_monster_with_immunities(

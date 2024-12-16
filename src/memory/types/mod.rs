@@ -19,6 +19,7 @@ pub mod states;
 pub mod last_hovered;
 pub mod skills;
 pub mod affixes;
+pub mod enchants;
 
 pub fn get_players(d2rprocess: &D2RInstance, unit_ptrs: [u64; 128]) -> Vec<PlayerUnit> {
     let units: Vec<Unit> = get_raw_units(d2rprocess, unit_ptrs);

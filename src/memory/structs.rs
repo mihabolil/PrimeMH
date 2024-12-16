@@ -141,7 +141,7 @@ pub struct MonsterData {
     pub monster_flags: u8,
     pub last_animation_mode: u8,
     pub duriel_flag: u32,
-    _dummy2: [u8; 10],
+    pub mon_u_mod: [u8; 10],
     pub boss_line_id: u16,
     _dummy3: [u8; 6],
     pub merc_name: u16,
