@@ -47,6 +47,7 @@ pub fn draw_presets(
     }
     for shrine in game_data.objects.iter() {
         let mut found = false;
+        let mut is_well = false;
         for poi in &mut this_level.level_image.pois.iter_mut() {
             if shrine.object_type == GameObjectType::Shrine
                 && shrine.pos_x == poi.world_x
@@ -61,12 +62,28 @@ pub fn draw_presets(
                     None => String::new(),
                 };
             }
+            if shrine.object_type == GameObjectType::Well
+                && shrine.pos_x == poi.world_x
+                && shrine.pos_y == poi.world_y
+            {
+                found = true;
+                is_well = true;
+                poi.label = String::new();
+                poi.poi_type = POIType::Well;
+            }
         }
         if !found {
             if shrine.shrine_type.is_some() {
-                let label =  shrine.shrine_type.unwrap().to_string();
-                let new_shrine = POI::new_shrine(shrine.pos_x, shrine.pos_y, &this_level.offset, label);
-                this_level.level_image.pois.push(new_shrine);    
+                if is_well {
+                    let label =  shrine.shrine_type.unwrap().to_string();
+                    let new_well = POI::new_well(shrine.pos_x, shrine.pos_y, &this_level.offset, label);
+                    this_level.level_image.pois.push(new_well);    
+                    
+                } else {
+                    let label =  shrine.shrine_type.unwrap().to_string();
+                    let new_shrine = POI::new_shrine(shrine.pos_x, shrine.pos_y, &this_level.offset, label);
+                    this_level.level_image.pois.push(new_shrine);    
+                }
             }
         }
     }

@@ -60,6 +60,18 @@ impl POI {
             label,
         }
     }
+    pub fn new_well(x: u32, y: u32, offset: &Offset, label: String) -> Self {
+        POI {
+            id: 2,
+            poi_type: POIType::Well,
+            pos_x: x as f32 - offset.x as f32,
+            pos_y: y as f32 - offset.y as f32,
+            world_x: x,
+            world_y: y,
+            class: "".to_string(),
+            label,
+        }
+    }
 }
 
 #[allow(dead_code)]

@@ -34,6 +34,8 @@ impl GameObjectUnit {
         let mut shrine_type: Option<ShrineType> = None;
         if object_type == GameObjectType::Shrine {
             shrine_type = ShrineType::from_u8(object_data.interact_type);
+        } else if object_type == GameObjectType::Well {
+            shrine_type = Some(ShrineType::Refilling);
         }
         let mut chest_state: Option<ChestState> = None;
         if object_type == GameObjectType::Chest || object_type == GameObjectType::SuperChest {
@@ -73,6 +75,7 @@ pub enum GameObjectType {
     Portal,
     RedPortal,
     Shrine,
+    Well,
     Chest,
     SuperChest,
     ArmorRack,
@@ -897,7 +900,7 @@ fn get_type(txt_file_no: &GameObject) -> GameObjectType {
         GameObject::HealthOrama => GameObjectType::Shrine,
         GameObject::ForestAltar => GameObjectType::Shrine,
         GameObject::HornShrine => GameObjectType::Shrine,
-        GameObject::HealingWell => GameObjectType::Shrine,
+        
         GameObject::BullHealthShrine => GameObjectType::Shrine,
         GameObject::SteleDesertMagicShrine => GameObjectType::Shrine,
         GameObject::InnerHellManaShrine => GameObjectType::Shrine,
@@ -945,19 +948,15 @@ fn get_type(txt_file_no: &GameObject) -> GameObjectType {
         GameObject::CaveMagicShrine => GameObjectType::Shrine,
         GameObject::Act3DungeonManaShrine => GameObjectType::Shrine,
         GameObject::Act3SewersMagicShrine1 => GameObjectType::Shrine,
-        GameObject::Act3SewersHealthWell => GameObjectType::Shrine,
         GameObject::Act3SewersManaWell => GameObjectType::Shrine,
         GameObject::Act3SewersMagicShrine2 => GameObjectType::Shrine,
         GameObject::Act2HaramMagicShrine1 => GameObjectType::Shrine,
         GameObject::Act2HaramMagicShrine2 => GameObjectType::Shrine,
-        GameObject::MaggotHealthWell => GameObjectType::Shrine,
         GameObject::MaggotManaWell => GameObjectType::Shrine,
         GameObject::ArcaneSanctuaryMagicShrine => GameObjectType::Shrine,
-        GameObject::ArcaneHealthWell => GameObjectType::Shrine,
         GameObject::ArcaneManaWell => GameObjectType::Shrine,
         GameObject::Act3SewerMagicShrine => GameObjectType::Shrine,
         GameObject::Act3KurastManaWell => GameObjectType::Shrine,
-        GameObject::Act3KurastHealthWell => GameObjectType::Shrine,
         GameObject::Act3DungeonMagicShrine => GameObjectType::Shrine,
         GameObject::ExpansionWildernessShrine1 => GameObjectType::Shrine,
         GameObject::ExpansionWildernessShrine2 => GameObjectType::Shrine,
@@ -990,6 +989,24 @@ fn get_type(txt_file_no: &GameObject) -> GameObjectType {
         GameObject::DesertShrineSkill => GameObjectType::Shrine,
         GameObject::DesertShrineRecharge => GameObjectType::Shrine,
         GameObject::DesertShrineStamina => GameObjectType::Shrine,
+        GameObject::JungleHealWell => GameObjectType::Shrine,  //healing well
+        GameObject::ArcaneHealthWell => GameObjectType::Shrine,
+        GameObject::Act3SewersHealthWell => GameObjectType::Shrine,
+        GameObject::MaggotHealthWell => GameObjectType::Shrine,
+        GameObject::Act3KurastHealthWell => GameObjectType::Shrine,
+
+        // wells
+        GameObject::HealingWell => GameObjectType::Well,
+        GameObject::Act1WildernessWell => GameObjectType::Well,
+        GameObject::CathedralWell => GameObjectType::Well,
+        GameObject::DesertWell => GameObjectType::Well,
+        GameObject::CaveWell => GameObjectType::Well,
+        GameObject::Act2TombWell => GameObjectType::Well,
+        GameObject::ExpansionWell => GameObjectType::Well,
+        GameObject::ExpansionSnowyWell => GameObjectType::Well,
+        GameObject::WorldstoneWell => GameObjectType::Well,
+        GameObject::ExpansionTempleWell => GameObjectType::Well,
+        GameObject::IceCaveWell => GameObjectType::Well,
 
         _ => GameObjectType::Dummy,
     }

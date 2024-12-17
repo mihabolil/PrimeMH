@@ -21,6 +21,7 @@ pub fn draw_objects(draw: &mut Draw, game_data: &GameData, settings: &Settings, 
         GameObjectType::RedPortal => draw_red_portal(object, player_pos, draw, settings, width, height),
         GameObjectType::SuperChest => draw_super_chest(object, player_pos, draw, settings, super_chest_image, width, height),
         GameObjectType::Shrine => (),
+        GameObjectType::Well => (),
         GameObjectType::ArmorRack => (),
         GameObjectType::Dummy => (),
     });
