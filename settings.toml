@@ -18,6 +18,7 @@ scale = 3.3
 map_opacity = 0.65
 always_show_map = true
 hide_map_menus_open = true
+exit_label_text_size = 4.0
 
 [item_log]
 enabled = true

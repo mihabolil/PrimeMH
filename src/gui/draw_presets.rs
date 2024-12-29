@@ -152,20 +152,20 @@ fn draw_exit(
 
         if current_level_id == this_level.id || poi.class != "walkable" {
             let font = all_fonts.get_safe_font(&settings.general.language);
-            let text_pos = (poi_pos.0 + (size.0 / 2.0), (poi_pos.1 + (size.1 / 2.0)) - (10.0 * scale));
+            let text_pos = (poi_pos.0 + (size.0 / 2.0), (poi_pos.1 + (size.1 / 2.0)) - (6.0 * scale));
             //TODO: Fix the text here, need to figure out how to flip or mirror it
             draw.text(&font, &label)
                 .position(text_pos.0 + 2.0, text_pos.1 + 2.0)
-                .size(6.0 * scale)
+                .size(settings.visual.exit_label_text_size * scale)
                 .color(Color::BLACK)
                 .h_align_center()
-                .v_align_top();
+                .v_align_middle();
             draw.text(&font, &label)
                 .position(text_pos.0, text_pos.1)
-                .size(6.0 * scale)
+                .size(settings.visual.exit_label_text_size * scale)
                 .color(Color::WHITE)
                 .h_align_center()
-                .v_align_top();
+                .v_align_middle();
         }
     }
 }

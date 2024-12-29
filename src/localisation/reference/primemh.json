@@ -565,27 +565,27 @@
   },
   {
     "Key": "hide_ui",
-    "enUS": "Press \"Home\" key to hide/unhide Settings Panel",
-    "esES": "Presione la tecla \"Inicio\" para ocultar/mostrar el Panel de configuración",
-    "deDE": "Drücken Sie die „Home“-Taste, um das Einstellungsfeld auszublenden/einzublenden",
-    "zhTW": "按下“Home”鍵隱藏/取消隱藏設定面板",
+    "enUS": "Hide/unhide Settings Panel: ",
+    "esES": "Ocultar/mostrar panel de configuración: ",
+    "deDE": "Einstellungsbereich ein-/ausblenden: ",
+    "zhTW": "隱藏/取消隱藏設定面板： ",
     "enBG": "Press \"Home\" key to hide/unhide Settings Panel",
-    "frFR": "Appuyez sur la touche « Accueil » pour masquer/afficher le panneau de paramètres",
-    "itIT": "Premere il tasto \"Home\" per nascondere/mostrare il pannello Impostazioni",
-    "koKR": "설정 패널을 숨기거나 숨기기 해제하려면 \"홈\" 키를 누르세요.",
-    "plPL": "Naciśnij klawisz „Strona główna”, aby ukryć/odkryć panel ustawień"
+    "frFR": "Masquer/afficher le panneau des paramètres : ",
+    "itIT": "Nascondi/mostra il pannello Impostazioni: ",
+    "koKR": "설정 패널 숨기기/숨기기 해제: ",
+    "plPL": "Ukryj/odkryj panel ustawień: "
   },
   {
     "Key": "hide_map",
-    "enUS": "Press \"Page Up\" key to hide/unhide Map Overlay",
-    "esES": "Presione la tecla \"Re Pág\" para ocultar/mostrar la superposición del mapa",
-    "deDE": "Drücken Sie die Taste „Bild nach oben“, um die Kartenüberlagerung ein-/auszublenden",
-    "zhTW": "按下“Page Up”鍵隱藏/取消隱藏地圖疊加",
+    "enUS": "Hide/unhide Map Overlay: ",
+    "esES": "Ocultar/mostrar superposición de mapa: ",
+    "deDE": "Kartenüberlagerung ein-/ausblenden: ",
+    "zhTW": "隱藏/取消隱藏地圖疊加： ",
     "enBG": "Press \"Page Up\" key to hide/unhide Map Overlay",
-    "frFR": "Appuyez sur la touche « Page précédente » pour masquer/afficher la superposition de carte",
-    "itIT": "Premere il tasto \"Pagina su\" per nascondere/mostrare la sovrapposizione della mappa",
-    "koKR": "지도 오버레이를 숨기거나 숨기기 해제하려면 \"Page Up\" 키를 누르세요.",
-    "plPL": "Naciśnij przycisk „Page Up”, aby ukryć/odkryć nakładkę mapy"
+    "frFR": "Masquer/afficher la superposition de carte : ",
+    "itIT": "Nascondi/mostra sovrapposizione mappa: ",
+    "koKR": "지도 오버레이 숨기기/숨기기 해제: ",
+    "plPL": "Ukryj/odkryj nakładkę mapy: "
   },
   {
     "Key": "choose_language",
@@ -645,7 +645,7 @@
     "frFR": "Erreur lors de l'ouverture du fichier de filtre d'élément",
     "itIT": "Errore durante l'apertura del file del filtro degli elementi",
     "koKR": "항목 필터 파일을 여는 중 오류가 발생했습니다.",
-    "plPL": "Błąd podczas otwierania pliku filtra elementów"
+    "plPL": "Błąd podczas otwierania pliku filtra pozycji"
   },
   {
     "Key": "error5",
@@ -685,15 +685,15 @@
   },
   {
     "Key": "error8",
-    "enUS": "Could not find d2lodpath, make sure you downloaded the d2lod zip as specified in #get-started.",
-    "esES": "No se pudo encontrar d2lodpath, asegúrese de haber descargado el zip de d2lod como se especifica en #get-started.",
-    "deDE": "D2lodpath konnte nicht gefunden werden. Stellen Sie sicher, dass Sie die d2lod-ZIP-Datei heruntergeladen haben, wie in #get-started angegeben.",
-    "zhTW": "找不到 d2lodpath，請確保您按照 #get-started 中的指定下載了 d2lod zip。",
+    "enUS": "Could not find d2lod files in 'd2lodpath', make sure you downloaded the d2lod zip as specified in #get-started.",
+    "esES": "No se pudieron encontrar archivos d2lod en 'd2lodpath', asegúrese de descargar el zip d2lod como se especifica en #get-started.",
+    "deDE": "Es konnten keine d2lod-Dateien in „d2lodpath“ gefunden werden. Stellen Sie sicher, dass Sie die d2lod-Zip-Datei wie in #get-started angegeben heruntergeladen haben.",
+    "zhTW": "在「d2lodpath」中找不到 d2lod 文件，請確保您按照 #get-started 中的指定下載了 d2lod zip。",
     "enBG": "Choose Language",
-    "frFR": "Impossible de trouver d2lodpath, assurez-vous d'avoir téléchargé le zip d2lod comme spécifié dans #get-started.",
-    "itIT": "Impossibile trovare d2lodpath, assicurati di aver scaricato il file zip d2lod come specificato in #get-started.",
-    "koKR": "d2lodpath를 찾을 수 없습니다. #get-started에 지정된 대로 d2lod zip을 다운로드했는지 확인하세요.",
-    "plPL": "Nie można znaleźć d2lodpath. Upewnij się, że pobrałeś plik zip d2lod zgodnie z instrukcją #get-started."
+    "frFR": "Impossible de trouver les fichiers d2lod dans « d2lodpath », assurez-vous d'avoir téléchargé le zip d2lod comme spécifié dans #get-started.",
+    "itIT": "Impossibile trovare i file d2lod in \"d2lodpath\", assicurati di aver scaricato il file zip d2lod come specificato in #get-started.",
+    "koKR": "'d2lodpath'에서 d2lod 파일을 찾을 수 없습니다. #get-started에 지정된 대로 d2lod zip을 다운로드했는지 확인하세요.",
+    "plPL": "Nie można znaleźć plików d2lod w „d2lodpath”. Upewnij się, że pobrałeś plik zip d2lod zgodnie z instrukcją #get-started."
   },
   {
     "Key": "error9",
@@ -712,7 +712,7 @@
     "enUS": "Could not find d2-mapgen.exe!\nCheck your paths\nCheck settings.toml\nFollow the instructions.",
     "esES": "¡No se pudo encontrar d2-mapgen.exe!\nrevisa tus caminos\nComprobar configuración.toml\nSigue las instrucciones.",
     "deDE": "Konnte d2-mapgen.exe nicht finden!\nÜberprüfen Sie Ihre Wege\nÜberprüfen Sie die Datei „settings.toml“.\nBefolgen Sie die Anweisungen.",
-    "zhTW": "無法找到 d2-mapgen.exe！\n檢查你的路徑\n檢查設定.toml\n請按照說明進行操作。",
+    "zhTW": "無法找到 d2-mapgen.exe！\n檢查你的路徑\n檢查設定.toml\n按照說明進行操作。",
     "enBG": "Choose Language",
     "frFR": "Impossible de trouver d2-mapgen.exe !\nVérifiez vos chemins\nVérifiez settings.toml\nSuivez les instructions.",
     "itIT": "Impossibile trovare d2-mapgen.exe!\nControlla i tuoi percorsi\nControllare settings.toml\nSegui le istruzioni.",
@@ -757,14 +757,26 @@
   },
   {
     "Key": "error14",
-    "enUS": "not found\nExiting PrimeMH...",
-    "esES": "extraviado\nSaliendo de PrimeMH...",
-    "deDE": "nicht gefunden\nPrimeMH wird beendet...",
-    "zhTW": "未找到\n退出 PrimeMH...",
+    "enUS": "D2R window not found\nIf you are running the game as administrator you must run the MH as administrator\nCheck the D2R window title name in settings.toml\nSome Anti-virus programs and D2R launchers may interfere\nExiting PrimeMH...",
+    "esES": "Ventana D2R no encontrada\nSi estás ejecutando el juego como administrador, debes ejecutar el MH como administrador.\nVerifique el nombre del título de la ventana D2R en settings.toml\nAlgunos programas antivirus y lanzadores D2R pueden interferir\nSaliendo de PrimeMH...",
+    "deDE": "D2R-Fenster nicht gefunden\nWenn Sie das Spiel als Administrator ausführen, müssen Sie den MH als Administrator ausführen\nÜberprüfen Sie den Namen des D2R-Fenstertitels in „settings.toml“.\nEinige Antivirenprogramme und D2R-Startprogramme können Störungen verursachen\nPrimeMH wird beendet...",
+    "zhTW": "未找到 D2R 窗口\n如果您以管理員身分執行遊戲，則必須以管理員身分執行 MH\n檢查settings.toml中的D2R視窗標題名稱\n某些防毒程式和 D2R 啟動器可能會幹擾\n退出 PrimeMH...",
     "enBG": "Choose Language",
-    "frFR": "pas trouvé\nQuitter PrimeMH...",
-    "itIT": "non trovato\nUscita da PrimeMH...",
-    "koKR": "찾을 수 없음\nPrimeMH 종료 중...",
-    "plPL": "nie znaleziono\nWychodzę z PrimeMH..."
+    "frFR": "Fenêtre D2R introuvable\nSi vous exécutez le jeu en tant qu'administrateur, vous devez exécuter le MH en tant qu'administrateur\nVérifiez le nom du titre de la fenêtre D2R dans settings.toml\nCertains programmes antivirus et lanceurs D2R peuvent interférer\nQuitter PrimeMH...",
+    "itIT": "Finestra D2R non trovata\nSe esegui il gioco come amministratore, devi eseguire MH come amministratore\nControlla il nome del titolo della finestra D2R in settings.toml\nAlcuni programmi antivirus e launcher D2R potrebbero interferire\nUscita da PrimeMH...",
+    "koKR": "D2R 창을 찾을 수 없습니다\n관리자 권한으로 게임을 실행하는 경우 MH를 관리자 권한으로 실행해야 합니다.\nsettings.toml에서 D2R 창 제목 이름을 확인하세요.\n일부 바이러스 백신 프로그램 및 D2R 실행 프로그램이 방해할 수 있음\nPrimeMH 종료 중...",
+    "plPL": "Nie znaleziono okna D2R\nJeśli uruchamiasz grę jako administrator, musisz uruchomić MH jako administrator\nSprawdź nazwę tytułu okna D2R w pliku settings.toml\nNiektóre programy antywirusowe i programy uruchamiające D2R mogą zakłócać działanie\nWychodzę z PrimeMH..."
+  },
+  {
+    "Key": "exit_text_size",
+    "enUS": "Area Exit Text Size",
+    "esES": "Tamaño del texto de salida del área",
+    "deDE": "Bereich-Ausgangstextgröße",
+    "zhTW": "區域退出文字大小",
+    "enBG": "Choose Language",
+    "frFR": "Taille du texte de sortie de zone",
+    "itIT": "Dimensioni del testo di uscita dell'area",
+    "koKR": "영역 종료 텍스트 크기",
+    "plPL": "Rozmiar tekstu wyjścia z obszaru"
   }
- ]
+]

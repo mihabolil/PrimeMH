@@ -21,9 +21,11 @@ pub fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
         .show(ui, |ui| {
             ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
                 let toggle_text = format!(
-                    "{}\n{}",
+                    "{} {}\n{} {}",
                     localisation.get_primemh("hide_ui"),
+                    state.settings.hotkeys.hotkey_toggle_menu,
                     localisation.get_primemh("hide_map"),
+                    state.settings.hotkeys.hotkey_toggle_map,
                 );
                 ui.label(toggle_text);
             });
@@ -84,6 +86,15 @@ pub fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                                 localisation.get_primemh("top_right"),
                             );
                         });
+                        ui.end_row();
+                        
+                        
+                        ui.label(localisation.get_primemh("exit_text_size"));
+                        ui.add(
+                            egui::DragValue::new(&mut state.settings.visual.exit_label_text_size)
+                                .range(0.1..=15.0)
+                                .speed(0.1),
+                        );
                         ui.end_row();
                         
                         

@@ -70,7 +70,7 @@ pub struct Unit {
     pub player_class: u32, //0x174
     #[derivative(Default(value = "[0; 46]"))]
     _dummy11: [u8; 46],
-    pub is_corpse: u8, //0x1A6
+    pub is_corpse: u8, //0x1A2
 }
 
 #[repr(C)]

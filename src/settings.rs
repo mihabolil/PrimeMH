@@ -63,6 +63,8 @@ pub struct Visual {
     pub map_opacity: f32,
     pub always_show_map: bool,
     pub hide_map_menus_open: bool,
+    #[serde(default = "get_four")]
+    pub exit_label_text_size: f32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -198,6 +200,10 @@ fn get_zero() -> u32 {
 
 fn get_eight() -> u8 {
     8
+}
+
+fn get_four() -> f32 {
+    4.0
 }
 
 #[derive(Debug, Serialize, Deserialize)]
