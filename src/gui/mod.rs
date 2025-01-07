@@ -3,6 +3,7 @@ use notan::text::Font;
 use crate::settings::Locales;
 
 mod draw_item_log;
+mod draw_item_tooltip;
 mod draw_lines;
 mod draw_map;
 mod draw_objects;

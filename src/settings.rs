@@ -14,7 +14,9 @@ use crate::SETTINGS_FILE;
 #[derive(Debug, Serialize, Deserialize)]
 #[allow(unused)]
 pub struct ItemToolTip {
+    #[serde(default = "get_true")]
     pub enabled: bool,
+    #[serde(default = "get_four")]
     pub text_size: f32,
 }
 
@@ -218,6 +220,7 @@ pub struct Settings {
     pub shrines: Shrines,
     pub lines: Lines,
     pub monsters: Monsters,
+    pub item_hover: ItemToolTip,
     #[serde(default = "default_hotkeys")]
     pub hotkeys: HotKeys,
 }

@@ -239,6 +239,24 @@ pub fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                     });
             });
         ui.separator();
+        egui::CollapsingHeader::new("Item Tool tips").default_open(false).show(ui, |ui| {
+            egui::Grid::new("tooltip_grid")
+                .num_columns(2)
+                .spacing([20.0, 6.0])
+                .striped(true)
+                .show(ui, |ui| {
+                    ui.label("Show item stat tool tips");
+                    ui.add(egui::Checkbox::new(&mut state.settings.item_hover.enabled, ""));
+                    ui.end_row();
+                    ui.label("Text scale");
+                    ui.add(
+                        egui::DragValue::new(&mut state.settings.item_hover.text_size)
+                            .range(1.0..=15.0)
+                            .speed(0.25),
+                    );
+                });
+        });
+        ui.separator();
         egui::CollapsingHeader::new(localisation.get_primemh("item_log"))
             .default_open(false)
             .show(ui, |ui| {

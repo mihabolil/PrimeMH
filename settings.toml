@@ -29,7 +29,7 @@ ground_alerts_text_size = 4.5
 voice_enabled = true
 voice_volume = 80
 voice_speed = 2
-ground_alerts_show_suffix_prefix = true
+ground_alerts_show_suffix_prefix = false
 
 [missiles]
 enabled = true
@@ -90,6 +90,10 @@ unique_mob_color = [212, 175, 55, 255]
 boss_mobs = true
 boss_mobs_size = 3.0
 boss_mob_color = [255, 0, 0, 255]
+
+[item_hover]
+enabled = true
+text_size = 5.0
 
 [hotkeys]
 hotkey_toggle_map = "PageDown"

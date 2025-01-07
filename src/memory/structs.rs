@@ -105,17 +105,19 @@ pub struct StaticPath {
 pub struct StatsList {
     #[derivative(Default(value = "[0; 48]"))]
     _dummy: [u8; 48],
-    pub stat_ptr: u64,
+    pub stat_ptr: u64,  // 0x30
     pub stat_count: u32,
-    #[derivative(Default(value = "[0; 108]"))]
-    _dummy2: [u8; 108],
+    #[derivative(Default(value = "[0; 84]"))]
+    _dummy2: [u8; 84],
+    pub stat_unit_ptr: u64, // 0x90
+    #[derivative(Default(value = "[0; 16]"))]
+    _dummy3: [u8; 16],
     pub stat_ex_ptr: u64,  // 0xA8
     pub stat_ex_count: u32, // 0xB0
     #[derivative(Default(value = "[0; 2620]"))]
-    _dummy3: [u8; 2620],
-    pub state_flags: [u32; 6],  //0xAC8
+    _dummy4: [u8; 2620],
+    pub state_flags: [u32; 6],  //0xAF0
 }
-
 
 impl fmt::Display for StatsList {
     // This trait requires `fmt` with this exact signature.

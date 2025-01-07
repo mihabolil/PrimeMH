@@ -30,6 +30,7 @@ use crate::{
 use winapi::shared::windef::{HWND, POINT};
 
 use super::draw_item_log::draw_item_log;
+use super::draw_item_tooltip::draw_item_tooltip;
 use super::draw_lines::draw_lines;
 use super::draw_objects::draw_objects;
 use super::draw_presets::draw_presets;
@@ -484,6 +485,8 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                                 state.item_frame,
                                 &state.item_filters,
                             );
+
+                            draw_item_tooltip(&mut draw, game_data, &state.settings, &state.fonts.exocet_font, &state.settings.visual.scale, state.relative_mouse_pos);
 
                             state.item_frame += 1;
                             if state.item_frame > 20 {

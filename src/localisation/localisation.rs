@@ -53,6 +53,23 @@ impl LocalisationLanguage {
         }
     }
 
+    pub fn get_item_name(&self, key_name: &String) -> String {
+        let new_key_name: String = key_name.chars()
+            .filter(|&c| c != '\'' && c != '-' && !c.is_whitespace())
+            .collect::<String>()
+            .to_lowercase();
+        let new_string = self.item_names.get(&new_key_name);
+        let new_string2 = self.item_runes.get(&new_key_name);
+        let new_string3 = self.item_gems.get(&new_key_name);
+
+        return match (new_string, new_string2, new_string3) {
+            (Some(value), None, None) => value.clone(),
+            (None, Some(value), None) => value.clone(),
+            (None, None, Some(value)) => value.clone(),
+            _ => String::from(new_key_name),
+        }
+    }
+
     pub fn get_npc_name(&self, key_name: &String) -> String {
         let new_key_name: String = key_name.chars()
             .filter(|&c| !c.is_digit(10) && !c.is_whitespace())
@@ -279,6 +296,10 @@ impl Localisation {
         self.languages.get(&self.current_locale).unwrap().get_primemh(key_name)
     }
 
+    pub fn get_item_name(&self, key_name: &String) -> String {
+        self.languages.get(&self.current_locale).unwrap().get_item_name(key_name)
+    }
+
     pub fn get_npc_name(&self, key_name: &String) -> String {
         self.languages.get(&self.current_locale).unwrap().get_npc_name(key_name)
     }
@@ -330,7 +351,7 @@ pub fn vec_to_hashmap(file_data: &Vec<LocalisationRawFileEntry>, locale: &Locale
         let new_key_name: String = entry.Key.chars()
             .filter(|&c| !c.is_whitespace())
             .collect();
-        hashmap.insert(new_key_name.to_lowercase().replace("-",""), val);
+        hashmap.insert(new_key_name.to_lowercase().replace("-","").replace("\'",""), val);
     }
     hashmap
 }
