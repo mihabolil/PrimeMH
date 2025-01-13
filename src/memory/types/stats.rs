@@ -249,6 +249,8 @@ impl Stat {
                             StatFormat::default()
                         }
                     }
+                } else if self.ex == true && self.last == false {
+                    StatFormat { stat_str: format!("{} Total Defense", self.value), order: 0}
                 } else {
                     StatFormat::default()
                 }
