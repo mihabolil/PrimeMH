@@ -14,6 +14,7 @@ use winapi::um::winuser::{
     WS_EX_LAYERED, WS_EX_TOPMOST, WS_EX_TRANSPARENT, WS_EX_WINDOWEDGE, WS_MINIMIZEBOX, WS_SYSMENU, WS_VISIBLE,
 };
 
+use crate::gui::draw_buff_bar::BuffBarAnimationState;
 use crate::gui::draw_map::draw_map;
 use crate::gui::Fonts;
 use crate::mapgeneration::blacha::is_blacha_ok;
@@ -179,6 +180,7 @@ fn init(gfx: &mut Graphics) -> State {
         language_icon,
         last_map_opacity,
         checked: false,
+        buff_bar_animation: BuffBarAnimationState::default(),
     }
 }
 
@@ -205,6 +207,7 @@ pub(crate) struct State {
     pub language_icon: egui::SizedTexture,
     pub last_map_opacity: f32,
     pub checked: bool,
+    pub buff_bar_animation: BuffBarAnimationState,
 }
 
 fn update(app: &mut App, state: &mut State) {
@@ -489,7 +492,8 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
 
                             draw_item_tooltip(&mut draw, game_data, &state.settings, &state.fonts.exocet_font, &state.settings.visual.scale, state.relative_mouse_pos);
 
-                            draw_buff_bar(&mut draw, game_data, &state.settings, &app.window().width(), &app.window().height(), &state.images);
+                            draw_buff_bar(&mut draw, game_data, &state.settings, &state.fonts, &mut state.buff_bar_animation, &app.window().width(), &app.window().height(), &state.images);
+                            
 
                             state.item_frame += 1;
                             if state.item_frame > 20 {

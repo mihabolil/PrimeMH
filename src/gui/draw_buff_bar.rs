@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::SystemTime;
 
 use notan::draw::*;
 use notan::prelude::*;
@@ -7,28 +8,22 @@ use crate::memory::gamedata::GameData;
 use crate::settings::Settings;
 use crate::types::states::State;
 
-pub fn draw_buff_bar(draw: &mut Draw, game_data: &GameData, settings: &Settings, width: &u32, height: &u32, images: &HashMap<String, Texture>) {
+use super::Fonts;
+
+pub fn draw_buff_bar(draw: &mut Draw, game_data: &GameData, settings: &Settings, all_fonts: &Fonts, buff_bar_animation: &mut BuffBarAnimationState, width: &u32, height: &u32, images: &HashMap<String, Texture>) {
     if !settings.buffbar.enabled {
         return;
     }
     let width = *width as f32;
     let height = *height as f32;
-    
-    let mut state_icons: Vec<BuffIcon> = vec![];
-    for state in game_data.player.states.iter() {
-        if state != &State::None {
-            match get_buff_bar_icon(state) {
-                Some(icon) => state_icons.push(icon),
-                None => ()
-            }
-        }
-    }
     let icon_size = (1.0 / settings.buffbar.icon_scale) * height;
 
-    if !state_icons.is_empty() {
-        let mut x = (width / 2.0) - (state_icons.len() as f32 * icon_size) / 2.0;
+    buff_bar_animation.update(&game_data.player.states);
+
+    if !buff_bar_animation.buff_icons.is_empty() {
+        let mut x = (width / 2.0) - (buff_bar_animation.buff_icons.len() as f32 * icon_size) / 2.0;
         let y = height * settings.buffbar.vertical_pos;
-        for state_icon in state_icons.iter() {
+        for state_icon in buff_bar_animation.buff_icons.iter() {
             let color = match state_icon.buff_group {
                 BuffGroup::Debuff => Color::RED,
                 BuffGroup::Buff => Color::GREEN,
@@ -37,12 +32,27 @@ pub fn draw_buff_bar(draw: &mut Draw, game_data: &GameData, settings: &Settings,
             };
             match images.get(&state_icon.image_name) {
                 Some(image) => {
-                    draw.rect((x - 1.0, y - 1.0), (icon_size + 2.0, icon_size + 2.0)).color(color);
-                    draw.image(image).position(x, y).size(icon_size, icon_size);
+                    if state_icon.removing == true && state_icon.buff_group == BuffGroup::Buff {
+                        // do the removal animation here
+                        
+                        if state_icon.animation_frame % 2 == 0 {
+                            draw.rect((x - 2.5, y - 2.5), (icon_size + 5.0, icon_size + 5.0)).color(Color::RED);
+                        } else {
+                            
+                        }
+                        draw.image(image).position(x, y).size(icon_size, icon_size).alpha(0.8);
+                        
+                        
+                        // draw.text(&all_fonts.formal_font, &state_icon.animation_frame.to_string()).position(x + icon_size - 20.0, y + icon_size - 20.0).size(20.0).color(Color::WHITE);
+
+                    } else if state_icon.removing == false {
+                        draw.rect((x - 1.0, y - 1.0), (icon_size + 2.0, icon_size + 2.0)).color(color);
+                        draw.image(image).position(x, y).size(icon_size, icon_size);
+                    }
                     x = x + icon_size + 3.0;
                 }
                 None => {
-                    println!("{}", &state_icon.image_name);
+                    log::info!("Found unknown state icon {}", &state_icon.image_name);
                 },
             };
             
@@ -51,6 +61,81 @@ pub fn draw_buff_bar(draw: &mut Draw, game_data: &GameData, settings: &Settings,
     
 }
 
+#[derive(Default)]
+pub struct BuffBarAnimationState {
+    pub buff_icons: Vec<BuffIcon>
+}
+
+impl BuffBarAnimationState {
+    pub fn update(&mut self, states: &[State; 192]) {
+        for state in states.iter() {
+            if state != &State::None {
+                match get_buff_bar_icon(state) {
+                    Some(new_icon) => {
+                        if self.buff_icons.iter_mut().find(|icon| icon.state == *state).is_none() {
+                            // add new one
+                            self.buff_icons.push(new_icon);
+                        }
+                    },
+                    None => ()
+                }
+            }
+        }
+        self.buff_icons.sort();
+        self.buff_icons.dedup();
+        for buff_icon in &mut self.buff_icons {
+            if buff_icon.removing {
+                buff_icon.animation_frame += 1;
+            }
+        }
+        self.buff_icons.retain(|buff_icon| buff_icon.animation_frame <= 100);
+        
+        
+        for buff_icon in self.buff_icons.iter_mut() {
+            if states.iter().find(|state| *state == &buff_icon.state).is_none() {
+                if buff_icon.removing == false {
+                    // state disappeared so set removing state to true and begin animation
+                    // log::info!("Removing state icon {}", &buff_icon.image_name);
+                    buff_icon.removing = true;
+                    buff_icon.started = SystemTime::now();
+                }
+            } else {
+                // state has come back during animation so reset animation
+                if buff_icon.removing == true {
+                    // log::info!("Aborting removal of state icon {}", &buff_icon.image_name);
+                    buff_icon.removing = false;
+                    buff_icon.animation_frame = 0;
+                    buff_icon.started = SystemTime::now();
+                }
+            }
+        }
+        // non buff icons are removed immediately
+        self.buff_icons.retain(|buff_icon| (buff_icon.buff_group != BuffGroup::Buff && buff_icon.removing == false) || buff_icon.buff_group == BuffGroup::Buff);
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Ord, PartialOrd, Debug)]
+pub struct BuffIcon {
+    pub image_name: String,
+    pub buff_group: BuffGroup,
+    pub removing: bool,
+    pub state: State,
+    pub animation_frame: u32,
+    pub started: SystemTime,
+}
+
+impl BuffIcon {
+    pub fn new(state: State, buff_group: BuffGroup, removing: bool) -> Self {
+        Self {
+            image_name: state.to_string(),
+            buff_group,
+            removing,
+            state,
+            animation_frame: 0,
+            started: SystemTime::now(),
+        }
+    }
+}
 
 pub fn get_buff_bar_icon(state: &State) -> Option<BuffIcon> {
     match state {
@@ -77,7 +162,7 @@ pub fn get_buff_bar_icon(state: &State) -> Option<BuffIcon> {
         State::Barbs |
         State::Wolverine |
         State::OakSage => {
-            Some(BuffIcon { image_name: state.to_string(), buff_group: BuffGroup::Aura })
+            Some(BuffIcon::new(state.clone(), BuffGroup::Aura, false))
         },
         State::FrozenArmor |
         State::Inferno |
@@ -110,7 +195,7 @@ pub fn get_buff_bar_icon(state: &State) -> Option<BuffIcon> {
         State::Quickness |
         State::Bladeshield |
         State::Fade => {
-            Some(BuffIcon { image_name: state.to_string(), buff_group: BuffGroup::Buff })
+            Some(BuffIcon::new(state.clone(), BuffGroup::Buff, false))
         },
         State::Poison |
         State::AmplifyDamage |
@@ -130,7 +215,7 @@ pub fn get_buff_bar_icon(state: &State) -> Option<BuffIcon> {
         State::LowerResist |
         State::DefenseCurse |
         State::BloodMana => {
-            Some(BuffIcon { image_name: state.to_string(), buff_group: BuffGroup::Debuff })
+            Some(BuffIcon::new(state.clone(), BuffGroup::Debuff, false))
         },
         _ => None
     }
@@ -138,11 +223,7 @@ pub fn get_buff_bar_icon(state: &State) -> Option<BuffIcon> {
 }
 
 
-pub struct BuffIcon {
-    pub image_name: String,
-    pub buff_group: BuffGroup
-}
-
+#[derive(Hash, Eq, PartialEq, Ord, PartialOrd, Debug)]
 #[allow(dead_code)]
 pub enum BuffGroup {
     Debuff,

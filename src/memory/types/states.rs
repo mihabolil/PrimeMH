@@ -22,7 +22,7 @@ pub fn parse_state_flags(state_flags: [u32; 6]) -> [State; 192] {
 
 #[allow(dead_code)]
 #[repr(u32)]
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy, Ord, PartialOrd)]
 pub enum State {
     None = 0,
     Freeze,
