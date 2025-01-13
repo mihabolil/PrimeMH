@@ -39,7 +39,7 @@ impl GameObjectUnit {
         }
         let mut chest_state: Option<ChestState> = None;
         if object_type == GameObjectType::Chest || object_type == GameObjectType::SuperChest {
-            chest_state = Some(ChestState::new(object_data.interact_type));
+            chest_state = Some(ChestState::new(object_data.interact_type, txt_file_no.clone()));
             // if object_data.interact_type > 0 && mode != GameObjectMode::Opened && object_data.interact_type != 128 && object_data.interact_type != 6 && object_data.interact_type != 9 {
             //     println!("{} {:?} {:?} {:?}", object_data.interact_type, txt_file_no, mode, chest_state);
             // }
@@ -96,7 +96,7 @@ pub enum GameObjectMode {
     Unknown,
 }
 
-#[derive(FromPrimitive, Debug, Clone, Default)]
+#[derive(FromPrimitive, Debug, Clone, Default, PartialEq)]
 pub enum GameObject {
     #[default]
     Unknown = 0,
@@ -687,9 +687,14 @@ pub struct ChestState {
 }
 
 impl ChestState {
-    fn new(interact_type: u8) -> Self {
+    fn new(interact_type: u8, txt_file_no: GameObject) -> Self {
         let locked = interact_type >> 7 == 1;
-        let trapped = interact_type << 1 > 0;
+        
+        let trapped = if txt_file_no == GameObject::IceCaveEvilUrn {
+            true
+        } else {
+            interact_type << 1 > 0
+        };
         ChestState { trapped, locked }
     }
 }

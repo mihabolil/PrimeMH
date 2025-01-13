@@ -212,11 +212,14 @@ fn draw_shrine(poi: &POI, player_pos: (f32, f32), draw: &mut Draw, settings: &Se
     let h = (image.height() * settings.shrines.size) * scale;
     let w = (image.width() * settings.shrines.size) * scale;
     let poi_pos = transform_position(unit_pos, (h, w), player_pos, scale, width, height);
-    draw.image(image)
-        .size(w, h)
-        .position(poi_pos.0 + (w / 1.5), poi_pos.1 - (h / 2.0));
-
-    if poi.poi_type != POIType::Well {
+    if poi.poi_type == POIType::Well {
+        draw.image(image)
+            .size(w, h)
+            .position(poi_pos.0 + (w / 2.0), poi_pos.1 - (h / 2.0));
+    } else {
+        draw.image(image)
+            .size(w, h)
+            .position(poi_pos.0 + (w / 1.5), poi_pos.1 - (h / 2.0));
         let font = all_fonts.get_safe_font(&settings.general.language);
         let text_pos = (poi_pos.0 + (w), (poi_pos.1 - (10.0 * scale)));
         draw.text(&font, &poi.label)
