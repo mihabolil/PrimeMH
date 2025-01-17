@@ -49,7 +49,7 @@ impl GameData {
         let npcs: Vec<NPCUnit> = get_npcs(d2rprocess, unit_ptrs.npc_ptrs);
         let objects: Vec<GameObjectUnit> = get_objects(d2rprocess, unit_ptrs.object_ptrs);
         let items: Vec<ItemUnit> = get_items(d2rprocess, unit_ptrs.item_ptrs);
-        let missiles: Vec<MissileUnit> = get_missiles(d2rprocess, unit_ptrs.missile_ptrs, unit_ptrs.server_missile_ptrs);
+        let missiles: Vec<MissileUnit> = get_missiles(d2rprocess, unit_ptrs.missile_ptrs, unit_ptrs.server_missile_ptrs, player);
 
         // let panels = get_panels(d2rprocess);
 

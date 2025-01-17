@@ -7,7 +7,7 @@ use crate::memory::{
     structs::{Path, Unit, StatsList},
 };
 
-use super::{states::{self, State}, skills::PlayerSkill, stats::{read_stats, StatEnum, Stat}};
+use super::{skills::{get_player_skills, PlayerSkill}, states::{self, State}, stats::{read_stats, Stat, StatEnum}};
 
 #[allow(dead_code)]
 #[derive(Derivative, Debug, Clone)]
@@ -34,7 +34,13 @@ impl PlayerUnit {
         let (pos_x, pos_y) = Self::get_position(d2rprocess, unit);
         let states = Self::get_states(d2rprocess, unit);
         let stats = Self::get_stats(d2rprocess, unit);
-        let skills = vec![]; //get_player_skills(d2rprocess, unit.p_skills);
+        let mut skills = vec![];    
+        if states[State::SharedStash as usize] != State::SharedStash {
+            skills = get_player_skills(d2rprocess, unit.p_skills);
+            if skills.len() > 0 {
+                log::info!("Skills: {:?} {:?}", mode, skills);
+            }
+        }
         
         let player_arr1 = d2rprocess.read_mem::<[u8; 24]>(unit.p_unit_data);
         let player_arr2 = d2rprocess.read_mem::<[u8; 24]>(unit.p_unit_data + 24);

@@ -28,6 +28,7 @@ pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, wi
     // draw player dot at the centre
     draw_player(&game_data.player, player_pos, draw, settings.visual.scale, width, height);
 
+    
     // draw npcs
     game_data.npcs.iter().for_each(|npc| match npc.npc_type {
         NPCType::Monster => { draw_monster(npc, player_pos, draw, settings, width, height, fonts); }
@@ -61,7 +62,7 @@ pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, wi
 
     // if other players don't exist on unit tables, use roster data to draw them on map
     roster_players.iter().for_each(|other_player| {
-        if game_data.player.unit_id != other_player.unit_id {
+        if game_data.player.unit_id != other_player.unit_id && same_levels.contains(&(other_player.area as u32)){
             let is_hostile = hostile_unit_ids.iter().any(|h| *h == other_player.unit_id);
             draw_other_player(
                 (other_player.pos_x as f32, other_player.pos_y as f32),

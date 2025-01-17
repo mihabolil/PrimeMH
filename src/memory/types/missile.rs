@@ -3,7 +3,7 @@ use num_traits::FromPrimitive;
 
 use crate::memory::{
     process::D2RInstance,
-    structs::{Path, Unit},
+    structs::{MissileData, Path, Unit},
 };
 
 #[allow(dead_code)]
@@ -16,6 +16,8 @@ pub struct MissileUnit {
     pub p_path: u64,
     pub missile_type: MissileType,
     pub missile_color: u32,
+    pub missile_data: MissileData,
+    pub collided: bool,
 }
 
 #[allow(dead_code)]
@@ -34,11 +36,17 @@ pub enum MissileType {
 }
 
 impl MissileUnit {
-    pub fn new(d2rprocess: &D2RInstance, unit: Unit) -> Self {
+    pub fn new(d2rprocess: &D2RInstance, unit: Unit, player_pos_x: f32, player_pos_y: f32, unit_id: u32) -> Self {
         let txt_file_no: Missile = Missile::from_u32(unit.txt_file_no).unwrap_or(Missile::Unknown);
         let (pos_x, pos_y) = Self::get_missile_position(d2rprocess, unit);
         let missile_type = get_missile_type(&txt_file_no);
         let missile_color = get_missile_color(&txt_file_no);
+        let missile_data: MissileData = d2rprocess.read_mem::<MissileData>(unit.p_unit_data);
+        let mut collided = false;
+        if (txt_file_no == Missile::Battleorders || txt_file_no == Missile::Battlecommand) && missile_data.base_skill_level < 100 {
+            collided = (unit_id == missile_data.dw_owner_id) || ((pos_x - player_pos_x).abs() < 2.5 && (pos_y - player_pos_y).abs() < 2.5);
+        }
+        
         MissileUnit {
             unit_id: unit.unit_id,
             txt_file_no,
@@ -47,6 +55,8 @@ impl MissileUnit {
             p_path: unit.p_path,
             missile_type,
             missile_color,
+            missile_data,
+            collided
         }
     }
 
@@ -71,7 +81,7 @@ impl MissileUnit {
 }
 
 
-#[derive(FromPrimitive, Debug, Clone)]
+#[derive(FromPrimitive, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Missile {
     Arrow,
     Javelin,

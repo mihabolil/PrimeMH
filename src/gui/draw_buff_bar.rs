@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::Instant;
 use std::time::SystemTime;
 
 use notan::draw::*;
@@ -6,15 +7,17 @@ use notan::prelude::*;
 
 use crate::memory::gamedata::GameData;
 use crate::settings::Settings;
+use crate::types::buffs::BuffTimer;
+use crate::types::buffs::BuffTimers;
 use crate::types::states::State;
 
 use super::Fonts;
 
-pub fn draw_buff_bar(draw: &mut Draw, game_data: &GameData, settings: &Settings, _all_fonts: &Fonts, buff_bar_animation: &mut BuffBarAnimationState, skill_selector_visible: bool, width: &u32, height: &u32, images: &HashMap<String, Texture>) {
+pub fn draw_buff_bar(draw: &mut Draw, game_data: &GameData, settings: &Settings, all_fonts: &Fonts, buff_bar_animation: &mut BuffBarAnimationState, skill_popover_visible: bool, buff_timers: &BuffTimers, width: &u32, height: &u32, images: &HashMap<String, Texture>) {
     if !settings.buffbar.enabled {
         return;
     }
-    if skill_selector_visible {
+    if skill_popover_visible {
         return;
     }
     let width = *width as f32;
@@ -37,20 +40,21 @@ pub fn draw_buff_bar(draw: &mut Draw, game_data: &GameData, settings: &Settings,
                 Some(image) => {
                     if state_icon.removing == true && state_icon.buff_group == BuffGroup::Buff {
                         // do the removal animation here
-                        
                         if state_icon.animation_frame % 2 == 0 {
                             draw.rect((x - 2.5, y - 2.5), (icon_size + 5.0, icon_size + 5.0)).color(Color::RED);
-                        } else {
-                            
                         }
                         draw.image(image).position(x, y).size(icon_size, icon_size).alpha(0.8);
-                        
-                        
                         // draw.text(&all_fonts.formal_font, &state_icon.animation_frame.to_string()).position(x + icon_size - 20.0, y + icon_size - 20.0).size(20.0).color(Color::WHITE);
 
                     } else if state_icon.removing == false {
                         draw.rect((x - 1.0, y - 1.0), (icon_size + 2.0, icon_size + 2.0)).color(color);
                         draw.image(image).position(x, y).size(icon_size, icon_size);
+                        if state_icon.state == State::BattleOrders {
+                            draw_timer_text(draw, x, y, icon_size, all_fonts, &buff_timers.battle_orders);
+                        }
+                        if state_icon.state == State::BattleCommand {
+                            draw_timer_text(draw, x, y, icon_size, all_fonts, &buff_timers.battle_command);
+                        }
                     }
                     x = x + icon_size + 3.0;
                 }
@@ -63,6 +67,17 @@ pub fn draw_buff_bar(draw: &mut Draw, game_data: &GameData, settings: &Settings,
     }
     
 }
+
+pub fn draw_timer_text(draw: &mut Draw, x: f32, y: f32, icon_size: f32, all_fonts: &Fonts, buff_timer: &BuffTimer) {
+    if buff_timer.expiration > Instant::now() {
+        let seconds_remaining = buff_timer.expiration.duration_since(Instant::now()).as_secs_f32().trunc() + 1.0;
+        if seconds_remaining > 0.0 {
+            draw.text(&all_fonts.formal_font, &seconds_remaining.to_string()).position(x + (icon_size / 2.0), y - 22.0).size(20.0).h_align_center().color(Color::WHITE);
+        }
+    }
+    
+}
+
 
 #[derive(Default)]
 pub struct BuffBarAnimationState {

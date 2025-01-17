@@ -49,7 +49,7 @@ pub struct Unit {
     _dummy3: u64,
     pub p_path: u64,
     #[derivative(Default(value = "[0; 72]"))]
-    _dummy4: [u8; 72],
+    _dummy4: [u8; 72],  //0x5e
     pub p_stats_list_ex: u64,
     pub p_inventory: u64,
     #[derivative(Default(value = "[0; 16]"))]
@@ -58,11 +58,11 @@ pub struct Unit {
     #[derivative(Default(value = "[0; 40]"))]
     _dummy7: [u8; 40],        //0x00B0
     pub unk_sort_stashes_by: u32,  //0x00D8
-    #[derivative(Default(value = "[0; 40]"))]
-    _dummy8: [u8; 40],
+    #[derivative(Default(value = "[0; 36]"))]
+    _dummy8: [u8; 36],
     pub p_skills: u64,
-    #[derivative(Default(value = "[0; 72]"))]
-    _dummy9: [u8; 72],
+    #[derivative(Default(value = "[0; 78]"))]
+    _dummy9: [u8; 78],
     pub p_next: u64,
     pub p_room_next: u64,
     #[derivative(Default(value = "[0; 20]"))]
@@ -70,7 +70,7 @@ pub struct Unit {
     pub player_class: u32, //0x174
     #[derivative(Default(value = "[0; 46]"))]
     _dummy11: [u8; 46],
-    pub is_corpse: u8, //0x1A2
+    pub is_corpse: u8, //0x1A6
 }
 
 #[repr(C)]
@@ -161,6 +161,19 @@ pub struct ObjectData {
     #[derivative(Default(value = "[0; 32]"))]
     _dummy2: [u8; 32],
     pub owner: [u8; 16],
+}
+
+#[repr(C)]
+#[derive(Derivative, Debug, Copy, Clone)]
+#[derivative(Default)]
+pub struct MissileData {
+    #[derivative(Default(value = "[0; 36]"))]
+    _dummy: [u8; 36],
+    pub dw_owner_id: u32,     //0x24
+    #[derivative(Default(value = "[0; 54]"))]
+    _dummy2: [u8; 54],
+    pub skill_level: u8,      //0x5E
+    pub base_skill_level: u8, //0x60
 }
 
 #[repr(C)]

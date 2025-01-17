@@ -35,7 +35,6 @@ pub fn draw_party_info(draw: &mut Draw, game_data: &GameData, formal_font: &Font
     let yoffset = top_margin + (spacing * 1.63);
     let xoffset = left_margin - 1.0;
     let current_player = game_data.roster_items.get(0).unwrap();
-    log::info!("{:?}", game_data.roster_items);
     
     let font_size_plvl = spacing / 5.0;
     let font_size_area = spacing / 7.0;

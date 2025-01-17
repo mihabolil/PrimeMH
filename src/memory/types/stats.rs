@@ -28,6 +28,7 @@ pub fn read_stats(d2rprocess: &D2RInstance, unit: &Unit) -> Vec<Stat> {
     let stat_list: StatsList = d2rprocess.read_mem::<StatsList>(unit.p_stats_list_ex);
     let mut stats: Vec<Stat> = vec![];
 
+
     let mut last_stat_ptr = stat_list.stat_unit_ptr;
     while last_stat_ptr != 0 {
         let stat_list_flags = d2rprocess.read_mem::<u64>(last_stat_ptr + 0x1C);
@@ -76,7 +77,6 @@ pub fn read_stats(d2rprocess: &D2RInstance, unit: &Unit) -> Vec<Stat> {
             stats.push(this_stat);
         }
     }
-    // fix defence
 
     stats
 }

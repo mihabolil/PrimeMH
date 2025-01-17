@@ -5,6 +5,7 @@ use crate::memory::{process::D2RInstance, structs::{Unit, UIWidget, UIPanelManag
 
 use self::{player::PlayerUnit, missile::MissileUnit, object::GameObjectUnit, npc::NPCUnit};
 
+pub mod buffs;
 pub mod item;
 pub mod item_filter;
 pub mod menus;
@@ -32,11 +33,11 @@ pub fn get_npcs(d2rprocess: &D2RInstance, unit_ptrs: [u64; 128]) -> Vec<NPCUnit>
 }
 
 
-pub fn get_missiles(d2rprocess: &D2RInstance, missile_ptrs: [u64; 128], server_missile_ptrs: [u64; 128]) -> Vec<MissileUnit> {
+pub fn get_missiles(d2rprocess: &D2RInstance, missile_ptrs: [u64; 128], server_missile_ptrs: [u64; 128], player: &PlayerUnit) -> Vec<MissileUnit> {
     let mut missile_units: Vec<Unit> = get_raw_units(d2rprocess, missile_ptrs);
     let mut server_missile_units: Vec<Unit> = get_raw_units(d2rprocess, server_missile_ptrs);
     missile_units.append(&mut server_missile_units);
-    missile_units.iter().map(|unit| MissileUnit::new(d2rprocess, *unit)).collect()
+    missile_units.iter().map(|unit| MissileUnit::new(d2rprocess, *unit, player.pos_x, player.pos_y, player.unit_id)).collect()
 }
 
 pub fn get_items(d2rprocess: &D2RInstance, item_ptrs: [u64; 128]) -> Vec<ItemUnit> {
