@@ -37,9 +37,6 @@ impl PlayerUnit {
         let mut skills = vec![];    
         if states[State::SharedStash as usize] != State::SharedStash {
             skills = get_player_skills(d2rprocess, unit.p_skills);
-            if skills.len() > 0 {
-                log::info!("Skills: {:?} {:?}", mode, skills);
-            }
         }
         
         let player_arr1 = d2rprocess.read_mem::<[u8; 24]>(unit.p_unit_data);
