@@ -72,7 +72,8 @@ pub fn draw_timer_text(draw: &mut Draw, x: f32, y: f32, icon_size: f32, all_font
     if buff_timer.expiration > Instant::now() {
         let seconds_remaining = buff_timer.expiration.duration_since(Instant::now()).as_secs_f32().round();
         if seconds_remaining > 0.0 {
-            draw.text(&all_fonts.formal_font, &seconds_remaining.to_string()).position(x + (icon_size / 2.0), y - 22.0).size(20.0).h_align_center().color(Color::WHITE);
+            let (font_size, font_color) = if seconds_remaining < 10.0 { (30.0, Color::RED) } else { (20.0, Color::WHITE) };
+            draw.text(&all_fonts.formal_font, &seconds_remaining.to_string()).position(x + (icon_size / 2.0), y - font_size - 3.0).size(font_size).h_align_center().color(font_color);
         }
     }
     
