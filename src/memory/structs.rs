@@ -169,11 +169,11 @@ pub struct ObjectData {
 pub struct MissileData {
     #[derivative(Default(value = "[0; 14]"))]
     _dummy: [u8; 14],
-    pub skill_level: u8,      //0x0E
+    pub skill_level: u8,      //0xe
     _dummy2: u8,
     pub base_skill_level: u8, //0x10
-    #[derivative(Default(value = "[0; 20]"))]
-    _dummy3: [u8; 20],
+    #[derivative(Default(value = "[0; 19]"))]
+    _dummy3: [u8; 19],
     pub dw_owner_id: u32,     //0x24
 }
 

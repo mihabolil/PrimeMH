@@ -52,21 +52,54 @@ impl Default for BuffTimer {
 
 
 pub fn check_buff_timers(game_data: &GameData, buff_timers: &mut BuffTimers) {
+    let current_player = game_data.roster_items.get(0).unwrap();
     //has missile collided
     for missile in game_data.missiles.iter() {
         if missile.collided && missile.missile_data.skill_level > 0 {
+            if missile.missile_data.dw_owner_id != game_data.player.unit_id { // missile belongs to someone else
+                let roster = game_data.roster_items.iter().find(|roster| roster.unit_id == missile.missile_data.dw_owner_id);
+                let is_in_party = match roster {
+                    Some(r) => {
+                        r.party_id == current_player.party_id && r.party_id != u16::MAX
+                    },
+                    None => {
+                        // log::debug!("Missile has dw_owner not in roster table {}", missile.missile_data.dw_owner_id);
+                        false
+                    },
+                };
+                // if other player is not in the same party then buffs won't work
+                if !is_in_party {
+                    continue
+                }
+                
+            }
+
             // I hate this convention
             if missile.txt_file_no == Missile::Battleorders {
-                
-                let shout = game_data.player.skills.iter().find(|skill| skill.skill == Skill::Shout);
-                let battle_command = game_data.player.skills.iter().find(|skill| skill.skill == Skill::BattleCommand);
+                // only count synergies if they're player missiles
+                let (shout, battle_command) = if game_data.player.unit_id == missile.missile_data.dw_owner_id {
+                    (
+                        game_data.player.skills.iter().find(|skill| skill.skill == Skill::Shout),
+                        game_data.player.skills.iter().find(|skill| skill.skill == Skill::BattleCommand),
+                    )
+                } else {
+                    (None, None)
+                };
                 buff_timers.battle_orders = BuffTimer::new(missile.missile_data.skill_level, Missile::Battleorders, shout, battle_command);
                 // log::info!("Battle Orders missile collided {:?}", buff_timers.battle_orders);
                 // break;
             }
             if missile.txt_file_no == Missile::Battlecommand {
-                let shout = game_data.player.skills.iter().find(|skill| skill.skill == Skill::Shout);
-                let battle_orders = game_data.player.skills.iter().find(|skill| skill.skill == Skill::BattleOrders);
+                // only count synergies if they're player missiles
+                let (shout, battle_orders) = if game_data.player.unit_id == missile.missile_data.dw_owner_id {
+                    (
+                        game_data.player.skills.iter().find(|skill| skill.skill == Skill::Shout),
+                        game_data.player.skills.iter().find(|skill| skill.skill == Skill::BattleOrders),
+                    )
+                } else {
+                    (None, None)
+                };
+                
                 buff_timers.battle_command = BuffTimer::new(missile.missile_data.skill_level, Missile::Battlecommand, shout, battle_orders);
                 // log::info!("Battle command missile collided {:?}", buff_timers.battle_command);
                 // break;
