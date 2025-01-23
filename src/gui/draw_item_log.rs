@@ -56,8 +56,10 @@ pub fn draw_item_log(
                     ItemMode::OnGround | ItemMode::Dropping => {
                         item_log.insert(this_item);
                         
-                        if sound_file.is_some() {
-                            play_sound(sound_file);
+                        if settings.item_log.sound_enabled {
+                            if sound_file.is_some() {
+                                play_sound(sound_file);
+                            }
                         }
 
                         // text to speech needs to be async

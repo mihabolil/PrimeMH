@@ -132,6 +132,8 @@ pub struct ItemLog {
     pub text_duration: i32,
     pub ground_alerts: bool,
     pub ground_alerts_text_size: f32,
+    #[serde(default = "get_true")]
+    pub sound_enabled: bool,
     pub voice_enabled: bool,
     pub voice_volume: u32,
     pub voice_speed: i32,
@@ -146,6 +148,7 @@ impl Default for ItemLog {
             text_duration: 30,
             ground_alerts: true,
             ground_alerts_text_size: 4.5,
+            sound_enabled: true,
             voice_enabled: true,
             voice_volume: 80,
             voice_speed: 2,
