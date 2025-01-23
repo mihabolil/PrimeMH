@@ -121,9 +121,19 @@ impl ItemUnit {
             String::new()
         };
         if self.set_item_name.is_some() {
-            format!("{:?} {:?}{}{}", self.set_item_name.as_ref().unwrap(), self.txt_file_no, eth, sockets).to_case(Case::Title)
+            if self.mode == ItemMode::OnGround || self.mode == ItemMode::Dropping {
+                format!("{:?} {:?}{}{}", self.set_item_name.as_ref().unwrap(), self.txt_file_no, eth, sockets).to_case(Case::Title)
+            } else {
+                format!("{:?} {:?}{}{} (Picked up)", self.set_item_name.as_ref().unwrap(), self.txt_file_no, eth, sockets).to_case(Case::Title)
+            }
+            
         } else if self.unique_item_name.is_some() {
-            format!("{:?} {:?}{}{}", self.unique_item_name.as_ref().unwrap(), self.txt_file_no, eth, sockets).to_case(Case::Title)
+            if self.mode == ItemMode::OnGround || self.mode == ItemMode::Dropping {
+                format!("{:?} {:?}{}{}", self.unique_item_name.as_ref().unwrap(), self.txt_file_no, eth, sockets).to_case(Case::Title)
+            } else {
+                format!("{:?} {:?}{}{} (Picked up)", self.unique_item_name.as_ref().unwrap(), self.txt_file_no, eth, sockets).to_case(Case::Title)
+            }
+            
         } else if self.quality == Quality::Magic && show_prefix_suffix {
             let mut magic_name = format!("{:?}", self.txt_file_no);
             if !self.item_prefixes.magic_prefix_name.is_empty() {
@@ -132,7 +142,11 @@ impl ItemUnit {
             if !self.item_prefixes.magic_suffix_name.is_empty() {
                 magic_name = format!("{} {}", magic_name, self.item_prefixes.magic_suffix_name)
             }
-            format!("{}{}{}", magic_name, eth, sockets).to_case(Case::Title)
+            if self.mode == ItemMode::OnGround || self.mode == ItemMode::Dropping {
+                format!("{}{}{}", magic_name, eth, sockets).to_case(Case::Title)
+            } else {
+                format!("{}{}{} (Picked up)", magic_name, eth, sockets).to_case(Case::Title)
+            }
         } else if self.quality == Quality::Rare && show_prefix_suffix {
             let mut rare_name = format!("{:?}", self.txt_file_no);
             if !self.item_prefixes.rare_suffix_name.is_empty() {
@@ -141,13 +155,22 @@ impl ItemUnit {
             if !self.item_prefixes.rare_prefix_name.is_empty() {
                 rare_name = format!("{} {}", self.item_prefixes.rare_prefix_name, rare_name)
             }
-            format!("{}{}{}", rare_name, eth, sockets).to_case(Case::Title)
+
+            if self.mode == ItemMode::OnGround || self.mode == ItemMode::Dropping {
+                format!("{}{}{}", rare_name, eth, sockets).to_case(Case::Title)
+            } else {
+                format!("{}{}{} (Picked up)", rare_name, eth, sockets).to_case(Case::Title)
+            }
         } else {
             // let localisation = LOCALISATION.lock().unwrap();
             // let base_name = format!("{:?}", self.txt_file_no);
             // let item_name = localisation.get_item_name(&base_name);
-            let base_name = format!("{}", self.txt_file_no);
-            format!("{}{}{}", base_name, eth, sockets).to_case(Case::Title)
+            
+            if self.mode == ItemMode::OnGround || self.mode == ItemMode::Dropping {
+                format!("{}{}{}", self.txt_file_no, eth, sockets).to_case(Case::Title)
+            } else {
+                format!("{}{}{} (Picked up)", self.txt_file_no, eth, sockets).to_case(Case::Title)
+            }
         }
     }
 
