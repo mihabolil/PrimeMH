@@ -221,22 +221,26 @@ pub fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                     .striped(true)
                     .show(ui, |ui| {
                         ui.label(localisation.get_primemh("show_waypoint_lines"));
-                        ui.add(egui::Checkbox::new(&mut state.settings.lines.waypoint_enabled, ""));
+                        ui.add(egui::Checkbox::new(&mut state.settings.lines.waypoint_enabled, "Line"));
+                        ui.add(egui::Checkbox::new(&mut state.settings.lines.waypoint_path_enabled, "Path"));
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.lines.waypoint_rgba);
                         ui.end_row();
 
                         ui.label(localisation.get_primemh("show_exit_lines"));
-                        ui.add(egui::Checkbox::new(&mut state.settings.lines.exit_enabled, ""));
+                        ui.add(egui::Checkbox::new(&mut state.settings.lines.exit_enabled, "Line"));
+                        ui.add(egui::Checkbox::new(&mut state.settings.lines.exit_path_enabled, "Path"));
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.lines.exit_rgba);
                         ui.end_row();
 
                         ui.label(localisation.get_primemh("show_quest_lines"));
-                        ui.add(egui::Checkbox::new(&mut state.settings.lines.quest_enabled, ""));
+                        ui.add(egui::Checkbox::new(&mut state.settings.lines.quest_enabled, "Line"));
+                        ui.add(egui::Checkbox::new(&mut state.settings.lines.quest_path_enabled, "Path"));
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.lines.quest_rgba);
                         ui.end_row();
 
                         ui.label(localisation.get_primemh("show_boss_lines"));
-                        ui.add(egui::Checkbox::new(&mut state.settings.lines.boss_enabled, ""));
+                        ui.add(egui::Checkbox::new(&mut state.settings.lines.boss_enabled, "Line"));
+                        ui.add(egui::Checkbox::new(&mut state.settings.lines.boss_path_enabled, "Path"));
                         ui.color_edit_button_srgba_unmultiplied(&mut state.settings.lines.boss_rgba);
                         ui.end_row();
                     });

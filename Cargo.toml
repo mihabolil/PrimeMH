@@ -1,6 +1,6 @@
 [package]
 name = "PrimeMH"
-version = "0.3.5"
+version = "0.3.7"
 author = ["joffreybesos"]
 edition = "2021"
 
@@ -33,6 +33,7 @@ serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 serde_yaml = "0.9"
 strum = { version = "0.24", features = ["derive"]}
 convert_case = "0.6.0"
+pathfinding = "3.0.13"
 syn = { version = "1.0.102", features = ["full", "extra-traits"] }
 log = "0.4.0"
 env_logger = "0.10.0"

@@ -36,6 +36,7 @@ use super::draw_item_tooltip::draw_item_tooltip;
 use super::draw_lines::draw_lines;
 use super::draw_objects::draw_objects;
 use super::draw_party_info::draw_party_info;
+use super::draw_path::draw_pathfinding;
 use super::draw_presets::draw_presets;
 use super::draw_units::draw_units;
 use super::egui::{create_egui_panel, create_language_select_ui};
@@ -456,7 +457,9 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                                                 (map_position_x + player_pos_x, map_position_y + player_pos_y),
                                                 45.0,
                                             );
-
+                                        if &game_data.seed_values.level == &this_level.id {
+                                            draw_pathfinding(&mut draw, game_data, &state.settings, this_level, map_position_x, map_position_y, player_pos_x, player_pos_y);
+                                        }
                                         draw.transform().pop();
                                         draw_presets(
                                             &mut draw,

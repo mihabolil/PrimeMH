@@ -9,6 +9,7 @@ mod draw_lines;
 mod draw_map;
 mod draw_objects;
 mod draw_party_info;
+mod draw_path;
 mod draw_presets;
 mod draw_units;
 mod images;

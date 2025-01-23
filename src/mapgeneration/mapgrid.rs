@@ -1,10 +1,6 @@
-use serde::Serialize;
 use std::ops::Sub;
 
-use super::{jsondata::LevelData};
-
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
-pub struct Pos(pub i16, pub i16);
+use super::{jsondata::LevelData, pathfind::Pos};
 
 #[derive(Clone, Debug)]
 pub struct MapGrid {

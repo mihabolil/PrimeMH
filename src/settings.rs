@@ -50,16 +50,16 @@ impl Default for Lines {
     fn default() -> Self {
         Lines {
             waypoint_enabled: true,
-            waypoint_path_enabled: true,
+            waypoint_path_enabled: false,
             waypoint_rgba: [255, 255, 0, 127],
             exit_enabled: true,
-            exit_path_enabled: true,
+            exit_path_enabled: false,
             exit_rgba: [255, 0, 255, 127],
             quest_enabled: true,
-            quest_path_enabled: true,
+            quest_path_enabled: false,
             quest_rgba: [0, 255, 0, 127],
             boss_enabled: true,
-            boss_path_enabled: true,
+            boss_path_enabled: false,
             boss_rgba: [255, 0, 0, 127],
         }
     }

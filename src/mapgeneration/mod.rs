@@ -5,4 +5,5 @@ pub mod mapgrid;
 pub mod mapimages;
 pub mod pois;
 pub mod seeddata;
+pub mod pathfind;
 mod walkableexits;

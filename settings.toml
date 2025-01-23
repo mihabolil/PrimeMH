@@ -26,6 +26,7 @@ text_size = 16.1
 text_duration = 30
 ground_alerts = true
 ground_alerts_text_size = 4.5
+sound_enabled = true
 voice_enabled = true
 voice_volume = 80
 voice_speed = 2
