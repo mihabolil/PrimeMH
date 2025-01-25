@@ -248,6 +248,8 @@ impl Default for Shrines {
 #[derive(Debug, Serialize, Deserialize)]
 #[allow(unused)]
 pub struct Monsters {
+    #[serde(default = "get_true")]
+    pub enabled: bool,
     pub immunities: bool,
     pub normal_mobs: bool,
     pub normal_mobs_size: f32,
@@ -269,6 +271,7 @@ pub struct Monsters {
 impl Default for Monsters {
     fn default() -> Self {
         Monsters {
+            enabled: true,
             immunities: true,
             normal_mobs: true,
             normal_mobs_size: 1.5,

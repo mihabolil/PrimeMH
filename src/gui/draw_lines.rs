@@ -168,7 +168,7 @@ pub fn get_next_exits(current_level_name: LevelName) -> Vec<LevelName> {
         LevelName::PalaceCellarLevel1 => vec![],
         LevelName::PalaceCellarLevel2 => vec![],
         LevelName::PalaceCellarLevel3 => vec![],
-        LevelName::StonyTombLevel1 => vec![],
+        LevelName::StonyTombLevel1 => vec![LevelName::StonyTombLevel2],
         LevelName::HallsOfTheDeadLevel1 => vec![LevelName::HallsOfTheDeadLevel2],
         LevelName::HallsOfTheDeadLevel2 => vec![LevelName::HallsOfTheDeadLevel3],
         LevelName::ClawViperTempleLevel1 => vec![LevelName::ClawViperTempleLevel2],

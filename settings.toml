@@ -75,6 +75,7 @@ boss_path_enabled = false
 boss_rgba = [255, 0, 0, 127]
 
 [monsters]
+enabled = true
 immunities = true
 normal_mobs = true
 normal_mobs_size = 1.5

@@ -95,14 +95,20 @@ pub fn draw_presets(
                 draw_waypoint(poi, player_pos, draw, settings.visual.scale, width, height);
             }
             POIType::Shrine => {
-                draw_shrine(poi, player_pos, draw, settings, shrine_image, width, height, all_fonts);
+                if settings.shrines.enabled {
+                    draw_shrine(poi, player_pos, draw, settings, shrine_image, width, height, all_fonts);
+                }
             }
             POIType::Well => {
-                draw_shrine(poi, player_pos, draw, settings,well_image, width, height, all_fonts);
+                if settings.shrines.enabled {
+                    draw_shrine(poi, player_pos, draw, settings,well_image, width, height, all_fonts);
+                }
             }
             POIType::Chest => (),
             POIType::SuperChest => {
-                draw_super_chest(poi, player_pos, draw, settings.visual.scale, super_chest_image, width, height);
+                if settings.chests.enabled {
+                    draw_super_chest(poi, player_pos, draw, settings.visual.scale, super_chest_image, width, height);
+                }
             }
             POIType::Exit => {
                 draw_exit(poi, player_pos, this_level, draw, settings.visual.scale, current_level_id, width, height, all_fonts, settings);

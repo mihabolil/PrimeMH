@@ -160,6 +160,10 @@ pub fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
                     .spacing([20.0, 6.0])
                     .striped(true)
                     .show(ui, |ui| {
+                        ui.label(localisation.get_primemh("show_monsters"));
+                        ui.add(egui::Checkbox::new(&mut state.settings.monsters.enabled, ""));
+                        ui.end_row();
+
                         ui.label(localisation.get_primemh("show_immunities"));
                         ui.add(egui::Checkbox::new(&mut state.settings.monsters.immunities, ""));
                         ui.end_row();

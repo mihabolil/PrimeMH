@@ -30,19 +30,23 @@ pub fn draw_units(draw: &mut Draw, game_data: &GameData, settings: &Settings, wi
 
     
     // draw npcs
-    game_data.npcs.iter().for_each(|npc| match npc.npc_type {
-        NPCType::Monster => { draw_monster(npc, player_pos, draw, settings, width, height, fonts); }
-        NPCType::Town => { draw_town_npc(npc, player_pos, draw, settings, fonts, width, height); }
-        NPCType::Pet => { draw_pet(npc, player_pos, draw, settings.visual.scale, width, height);}
-        _ => (),
-    });
+    if settings.monsters.enabled {
+        game_data.npcs.iter().for_each(|npc| match npc.npc_type {
+            NPCType::Monster => { draw_monster(npc, player_pos, draw, settings, width, height, fonts); }
+            NPCType::Town => { draw_town_npc(npc, player_pos, draw, settings, fonts, width, height); }
+            NPCType::Pet => { draw_pet(npc, player_pos, draw, settings.visual.scale, width, height);}
+            _ => (),
+        });
+    }
 
     // draw bosses separately to ensure they draw on top
-    game_data.npcs.iter().for_each(|npc| {
-        if let NPCType::Boss = npc.npc_type {
-            draw_boss(npc, player_pos, draw, settings, fonts, width, height);
-        }
-    });
+    if settings.monsters.enabled {
+        game_data.npcs.iter().for_each(|npc| {
+            if let NPCType::Boss = npc.npc_type {
+                draw_boss(npc, player_pos, draw, settings, fonts, width, height);
+            }
+        });
+    }
 
     // draw other players
     // get players that are in the roster, but not the unit table
@@ -166,7 +170,7 @@ fn draw_monster(npc: &NPCUnit, player_pos: (f32, f32), draw: &mut Draw, settings
             (size, npc_pos, normal_color)
         }
     };
-    if immunities.is_empty() {
+    if immunities.is_empty() || !settings.monsters.immunities {
         draw.ellipse(npc_pos, size).color(mob_color).scale_from(npc_pos, (1.0, 0.5));
     } else {
         draw_monster_with_immunities(draw, immunities, npc_pos, size, mob_color);
