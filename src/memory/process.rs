@@ -1,3 +1,4 @@
+use std::backtrace::{Backtrace, BacktraceStatus};
 use std::fmt::Debug;
 use std::mem::{size_of_val, MaybeUninit};
 use std::os::windows::ffi::OsStrExt;
@@ -259,7 +260,8 @@ impl D2RInstance {
                 NULL as *mut usize,
             );
             if rpm_return == FALSE {
-                log::debug!("ReadProcessMemory read_mem_offset failed. Error: {:?} {:?} {}", std::io::Error::last_os_error(), &address, type_name::<T>());
+                let caller = get_caller();
+                log::debug!("ReadProcessMemory read_mem_offset failed. Error: {:?}, ptr: {:?}, type: {}, caller: {}", std::io::Error::last_os_error(), &address, type_name::<T>(), caller);    
                 self.is_running();
             }
         }
@@ -366,7 +368,8 @@ impl D2RInstance {
                 NULL as *mut usize,
             );
             if rpm_return == FALSE {
-                log::debug!("ReadProcessMemory failed. Error: {:?} {:?} {}", std::io::Error::last_os_error(), &address, type_name::<T>());
+                let caller = get_caller();
+                log::debug!("ReadProcessMemory failed. Error: {:?}, ptr: {:?}, type: {}, caller: {}", std::io::Error::last_os_error(), &address, type_name::<T>(), caller);    
                 self.is_running();
             }
         }
@@ -388,4 +391,21 @@ impl D2RInstance {
     pub fn close(&self) {
         unsafe { CloseHandle(self.handle) };
     }
+}
+
+fn get_caller() -> String {
+    let backtrace = Backtrace::capture();
+    if backtrace.status() == BacktraceStatus::Captured {
+        let backtrace_string = format!("{:?}", backtrace);
+        let entries = backtrace_string.split("{ fn: ").collect::<Vec<&str>>();
+        // log::info!("{:?}", entries);
+        let mut calling_func = "";
+        for i in 0..entries.len() - 1 {
+            if entries[i].contains("PrimeMH::memory::process::D2RInstance::read_mem") {
+                calling_func = entries[i + 1];
+            }
+        }
+        return calling_func.to_string();
+    }
+    return String::new()
 }

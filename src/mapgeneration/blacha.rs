@@ -105,12 +105,11 @@ fn delete_cached_file(cached_seed_data_file: &PathBuf) {
 }
 
 fn generate_data(seed_request: SeedRequest) -> String {
-    let localisation = LOCALISATION.lock().unwrap();
     let d2log_absolute_path = seed_request.d2lodpath.canonicalize().expect("Failed to get absolute path for d2lodpath");
     // generate data
     let start = Instant::now();
 
-    let output = match Command::new(seed_request.blacha_exe)
+    let output = Command::new(seed_request.blacha_exe)
         .creation_flags(0x08000000)
         .arg("/C")
         .arg(d2log_absolute_path)
@@ -120,13 +119,9 @@ fn generate_data(seed_request: SeedRequest) -> String {
         .arg(seed_request.difficulty.to_string())
         // .arg("--map")
         // .arg("1")
-        .output() {
-            Ok(o) => o,
-            Err(e) => {
-                panic!("{}\n{}", localisation.get_primemh("error2"), e)
-            }
-        };
-    
+        .output()
+        .unwrap();
+
     log::info!("Map data generation took {:.3} seconds", (start.elapsed().as_millis() as f64 / 1000.0));
 
     // parse stdout and clean it up
