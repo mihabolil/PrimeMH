@@ -1,10 +1,28 @@
 use std::time::{Duration, Instant};
 
-use crate::memory::gamedata::GameData;
+use crate::memory::{gamedata::GameData, instance_manager::WindowInfo};
 
 use super::{missile::Missile, skills::{PlayerSkill, Skill}};
+use crate::gui::draw_buff_bar::BuffBarAnimationState;
 
-#[derive(Debug)]
+pub struct BuffInstance {
+    pub window_info: WindowInfo,
+    pub buff_timers: BuffTimers,
+    pub buff_animation_state: BuffBarAnimationState,
+}
+
+impl BuffInstance {
+    pub fn new(window_info: WindowInfo) -> Self {
+        Self {
+            window_info,
+            buff_timers: BuffTimers::default(),
+            buff_animation_state: BuffBarAnimationState::default(),
+        }
+    }
+}
+
+
+#[derive(Debug, Clone)]
 pub struct BuffTimers {
     pub battle_orders: BuffTimer,
     pub battle_command: BuffTimer,
@@ -20,9 +38,10 @@ impl Default for BuffTimers {
 }
 
 #[allow(unused)]
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BuffTimer {
     pub timer: Instant,
+    pub duration_secs: u64,
     pub expiration: Instant,
     pub level: u8,
     pub buff_type: Missile
@@ -30,9 +49,11 @@ pub struct BuffTimer {
 
 impl BuffTimer {
     pub fn new(level: u8, buff_type: Missile, synergy1: Option<&PlayerSkill>, synergy2: Option<&PlayerSkill>) -> Self {
+        let duration_secs = calculate_expiration(&buff_type, level, synergy1, synergy2);
         Self {
             timer: Instant::now(),
-            expiration: calculate_expiration(&buff_type, level, synergy1, synergy2),
+            duration_secs,
+            expiration: Instant::now() + Duration::from_secs(duration_secs),
             level,
             buff_type
         }
@@ -43,6 +64,7 @@ impl Default for BuffTimer {
     fn default() -> Self {
         Self {
             timer: Instant::now(),
+            duration_secs: 0,
             expiration: Instant::now(),
             level: 0,
             buff_type: Missile::Unknown
@@ -52,6 +74,7 @@ impl Default for BuffTimer {
 
 
 pub fn check_buff_timers(game_data: &GameData, buff_timers: &mut BuffTimers) {
+    let old_buff_timers = buff_timers.clone();
     let current_player = game_data.roster_items.get(0).unwrap();
     //has missile collided
     for missile in game_data.missiles.iter() {
@@ -86,8 +109,6 @@ pub fn check_buff_timers(game_data: &GameData, buff_timers: &mut BuffTimers) {
                     (None, None)
                 };
                 buff_timers.battle_orders = BuffTimer::new(missile.missile_data.skill_level, Missile::Battleorders, shout, battle_command);
-                // log::info!("Battle Orders missile collided {:?}", buff_timers.battle_orders);
-                // break;
             }
             if missile.txt_file_no == Missile::Battlecommand {
                 // only count synergies if they're player missiles
@@ -101,15 +122,19 @@ pub fn check_buff_timers(game_data: &GameData, buff_timers: &mut BuffTimers) {
                 };
                 
                 buff_timers.battle_command = BuffTimer::new(missile.missile_data.skill_level, Missile::Battlecommand, shout, battle_orders);
-                // log::info!("Battle command missile collided {:?}", buff_timers.battle_command);
-                // break;
             }
         }
     };
+    if buff_timers.battle_orders != old_buff_timers.battle_orders {
+        log::info!("Battle Orders timer restarted, level {:?} duration {:?}", buff_timers.battle_orders.level, buff_timers.battle_orders.duration_secs);
+    }
+    if buff_timers.battle_command != old_buff_timers.battle_command {
+        log::info!("Battle Command timer restarted, level {:?} duration {:?}", buff_timers.battle_command.level, buff_timers.battle_command.duration_secs);
+    }
 }
 
 
-fn calculate_expiration(buff_type: &Missile, level: u8, synergy1: Option<&PlayerSkill>, synergy2: Option<&PlayerSkill>) -> Instant {
+fn calculate_expiration(buff_type: &Missile, level: u8, synergy1: Option<&PlayerSkill>, synergy2: Option<&PlayerSkill>) -> u64 {
     match buff_type {
         Missile::Battleorders => {
             let mut duration = match level {
@@ -169,7 +194,7 @@ fn calculate_expiration(buff_type: &Missile, level: u8, synergy1: Option<&Player
                 }
             }
             
-            return Instant::now() + Duration::from_secs(duration)
+            return duration
         },
         Missile::Battlecommand => {
             let mut duration = match level {
@@ -209,10 +234,10 @@ fn calculate_expiration(buff_type: &Missile, level: u8, synergy1: Option<&Player
                     duration = duration + (battle_orders.hard_points as u64 * 5);
                 }
             }
-            return Instant::now() + Duration::from_secs(duration)
+            return duration
         },
         _ => {
-            return Instant::now() + Duration::from_secs(0)
+            return 0
         }
     }
 }

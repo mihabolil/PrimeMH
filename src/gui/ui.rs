@@ -15,7 +15,7 @@ use winapi::um::winuser::{
 };
 
 use crate::memory::instance_manager::{get_process_pid_and_window_handle, WindowInfo};
-use crate::types::buffs::{check_buff_timers, BuffTimers};
+use crate::types::buffs::{check_buff_timers, BuffInstance};
 use crate::gui::draw_map::draw_map;
 use crate::gui::Fonts;
 use crate::mapgeneration::blacha::is_blacha_ok;
@@ -31,7 +31,7 @@ use crate::{
 };
 use winapi::shared::windef::{HWND, POINT};
 
-use super::draw_buff_bar::{draw_buff_bar, BuffBarAnimationState};
+use super::draw_buff_bar::draw_buff_bar;
 use super::draw_item_log::draw_item_log;
 use super::draw_item_tooltip::draw_item_tooltip;
 use super::draw_lines::draw_lines;
@@ -127,6 +127,7 @@ fn init(gfx: &mut Graphics) -> State {
         panic!("{}", localisation.get_primemh("error12"))
     }
     let d2rinstances: Vec<D2RInstance> = windows.iter().map(|window| D2RInstance::new(&window)).collect();
+    let buff_instances: Vec<BuffInstance> = d2rinstances.iter().map(|instance: &D2RInstance| BuffInstance::new(instance.window.clone())).collect();
 
     let exocet_font = gfx.create_font(include_bytes!("./fonts/exocet.otf")).expect("Could not load exocet font!");
     let formal_font = gfx.create_font(include_bytes!("./fonts/formal.otf")).expect("Could not load formal font!");
@@ -190,8 +191,7 @@ fn init(gfx: &mut Graphics) -> State {
         language_icon,
         last_map_opacity,
         checked: false,
-        buff_bar_animation: BuffBarAnimationState::default(),
-        buff_timers: BuffTimers::default(),
+        buff_instances: buff_instances,
     }
 }
 
@@ -219,8 +219,7 @@ pub(crate) struct State {
     pub language_icon: egui::SizedTexture,
     pub last_map_opacity: f32,
     pub checked: bool,
-    pub buff_bar_animation: BuffBarAnimationState,
-    pub buff_timers: BuffTimers
+    pub buff_instances: Vec<BuffInstance>,
 }
 
 fn update(app: &mut App, state: &mut State) {
@@ -261,8 +260,8 @@ fn update(app: &mut App, state: &mut State) {
             }
             
             if let Some(game_data) = GameData::read_game_memory(d2rprocess) {
-
-                check_buff_timers(&game_data, &mut state.buff_timers);
+                let buff_instance: &mut BuffInstance = state.buff_instances.iter_mut().find(|instance| instance.window_info.hwnd == d2rprocess.window.hwnd).unwrap();
+                check_buff_timers(&game_data, &mut buff_instance.buff_timers);
                 // if new seed
                 if game_data.seed_values.map_seed != state.last_seed {
                     // generate new seed data using blachas' tool and parse the JSON into seed_data
@@ -274,7 +273,6 @@ fn update(app: &mut App, state: &mut State) {
                     );
                     log::info!("Using D2LoD path '{}'", &state.settings.general.d2lodpath.as_os_str().to_string_lossy());
                     state.seed_data = mapgeneration::seeddata::generate_seed_data(&game_data.seed_values, &state.settings);
-                    state.buff_timers = BuffTimers::default();
                 }
                 state.last_seed = game_data.seed_values.map_seed;
                 state.game_data = Some(game_data);
@@ -424,7 +422,7 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                     .h_align_center()
                     .v_align_top();
             } else {
-                if text_duration.clone() != 5 {
+                if text_duration.clone() != 6 {
                     log::error!("Taiwan number 1!");
                 } else {
                     //toggle map with "Page Up" button
@@ -516,7 +514,8 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                                 );
 
                                 draw_item_tooltip(&mut draw, game_data, &state.settings, &state.fonts.exocet_font, &state.settings.visual.scale, state.relative_mouse_pos);
-                                draw_buff_bar(&mut draw, game_data, &state.settings, &state.fonts, &mut state.buff_bar_animation, game_data.menus.skill_popover_visible, &state.buff_timers, &app.window().width(), &app.window().height(), &state.images);
+                                let buff_instance: &mut BuffInstance = state.buff_instances.iter_mut().find(|instance| instance.window_info.hwnd == d2rprocess.window.hwnd).unwrap();
+                                draw_buff_bar(&mut draw, game_data, &state.settings, &state.fonts, &mut buff_instance.buff_animation_state, game_data.menus.skill_popover_visible, &buff_instance.buff_timers, &app.window().width(), &app.window().height(), &state.images);
                                 draw_party_info(&mut draw, game_data, &state.fonts.formal_font, game_data.menus.party_portaits, &state.settings.party_info, &app.window().width(), &app.window().height());
 
                                 state.item_frame += 1;
