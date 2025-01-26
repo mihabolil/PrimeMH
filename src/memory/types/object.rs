@@ -999,9 +999,9 @@ fn get_type(txt_file_no: &GameObject) -> GameObjectType {
         GameObject::Act3SewersHealthWell => GameObjectType::Shrine,
         GameObject::MaggotHealthWell => GameObjectType::Shrine,
         GameObject::Act3KurastHealthWell => GameObjectType::Shrine,
+        GameObject::HealingWell => GameObjectType::Shrine, // definitely a shrine
 
         // wells
-        GameObject::HealingWell => GameObjectType::Well,
         GameObject::Act1WildernessWell => GameObjectType::Well,
         GameObject::CathedralWell => GameObjectType::Well,
         GameObject::DesertWell => GameObjectType::Well,
