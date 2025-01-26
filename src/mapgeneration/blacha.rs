@@ -109,15 +109,16 @@ fn is_running_in_wine() -> bool {
 }
 
 fn generate_data(seed_request: SeedRequest) -> String {
-    let d2log_absolute_path = seed_request.d2lodpath.canonicalize().expect("Failed to get absolute path for d2lodpath");
+    let d2lod_absolute_path = seed_request.d2lodpath.canonicalize().expect("Failed to get absolute path for d2lodpath");
     // generate data
     let start = Instant::now();
 
     let output = if is_running_in_wine() {
-        log::info!("Running in wine d2log_absolute_path: {:?}", d2log_absolute_path.display());
+        log::info!("Running in wine d2lod_absolute_path: {:?} blacha {:?}", d2lod_absolute_path.display(), seed_request.blacha_exe);
     
         Command::new("wine")
-            .arg(d2log_absolute_path)
+            .arg(seed_request.blacha_exe)
+            .arg(d2lod_absolute_path)
             .arg("--seed")
             .arg(seed_request.map_seed.to_string())
             .arg("--difficulty")
@@ -133,7 +134,7 @@ fn generate_data(seed_request: SeedRequest) -> String {
         Command::new(seed_request.blacha_exe)
             .creation_flags(0x08000000)
             .arg("/C")
-            .arg(d2log_absolute_path)
+            .arg(d2lod_absolute_path)
             .arg("--seed")
             .arg(seed_request.map_seed.to_string())
             .arg("--difficulty")

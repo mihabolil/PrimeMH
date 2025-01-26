@@ -65,7 +65,7 @@ pub fn get_panels(d2rprocess: &D2RInstance) -> HashSet<String> {
     }
     panel_names
 }
-
+    
 #[allow(dead_code)]
 fn follow_p_next_panel(d2rprocess: &D2RInstance, memory_address: u64, num_children: u64, widgets: &mut Vec<UIWidget>) {
     for i in 0..num_children {
