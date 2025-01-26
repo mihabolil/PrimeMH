@@ -333,9 +333,6 @@ pub struct General {
     pub blacha_exe: PathBuf,
     pub render_scale: f32,
     pub fps_limit: u8,
-    pub title: String,
-    #[serde(default = "get_zero")]
-    pub d2r_pid: u32,
     pub map_position: MapPosition,
     #[serde(default = "get_eight")]
     pub multisampling: u8,
@@ -357,8 +354,6 @@ impl Default for General {
             blacha_exe: PathBuf::from("bin/d2-mapgen.exe"),
             render_scale: 1.0,
             fps_limit: 60,
-            title: "Diablo II: Resurrected".to_string(),
-            d2r_pid: 0,
             map_position: MapPosition::Center,
             multisampling: 8,
             vsync: true,
@@ -371,10 +366,6 @@ impl Default for General {
 
 fn get_true() -> bool {
     true
-}
-
-fn get_zero() -> u32 {
-    0
 }
 
 fn get_eight() -> u8 {

@@ -1,9 +1,6 @@
 use std::backtrace::{Backtrace, BacktraceStatus};
 use std::fmt::Debug;
 use std::mem::{size_of_val, MaybeUninit};
-use std::os::windows::ffi::OsStrExt;
-use std::ptr::null;
-use std::os::windows::process::CommandExt;
 use std::any::type_name;
 use proc_mem::ProcMemError;
 use winapi;
@@ -13,21 +10,24 @@ use winapi::shared::ntdef::NULL;
 use winapi::shared::windef::{HWND, POINT, RECT, HWND__};
 use winapi::um::handleapi::CloseHandle;
 use winapi::um::psapi::{EnumProcessModules, GetModuleBaseNameA};
-use winapi::um::winuser::{ClientToScreen, FindWindowW, GetClientRect, GetDpiForWindow, GetForegroundWindow};
+use winapi::um::winuser::{ClientToScreen, GetClientRect, GetDpiForWindow, GetForegroundWindow};
 use winapi::um::{processthreadsapi::OpenProcess, winnt::PROCESS_ALL_ACCESS};
 
 use crate::LOCALISATION;
 
+use super::instance_manager::WindowInfo;
+
 #[allow(dead_code)]
+#[derive(Clone, Debug)]
 pub struct D2RInstance {
+    pub window: WindowInfo,
     pub handle: HANDLE,
     pub base_address: usize,
     pub offsets: Offsets,
-    pub title: String,
-    pub pid: u32,
 }
 
 #[allow(dead_code)]
+#[derive(Clone, Debug)]
 pub struct Offsets {
     pub unit_table: u64,
     pub ui_offset: u64,
@@ -39,6 +39,7 @@ pub struct Offsets {
 }
 
 #[allow(dead_code)]
+#[derive(Clone, Debug)]
 pub struct D2RWindowArea {
     pub window_handle: HWND,
     pub x: i32,
@@ -50,70 +51,50 @@ pub struct D2RWindowArea {
 }
 
 impl D2RInstance {
-    pub fn open_d2r(pid: u32, title: String) -> Self {
+    pub fn new(window: &WindowInfo) -> Self {
         // https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-openprocess?redirectedfrom=MSDN
-        log::info!("pid {}", pid);
-        if pid == 0 { // use title if no pid
-            let title_pid = Self::match_title(title.clone());
-            log::info!("Using D2R window title to identify D2R Instance, PID: {} Title: '{}'", title_pid, title);
-            return Self::open(title, title_pid)
-        } else {
-            let new_title: String = Self::match_pid(pid.clone());
-            log::info!("Using D2R PID to identify D2R Instance, PID: {} Title: {}", pid, new_title);
-            return Self::open(new_title, pid)
-        }
-    }
-
-    fn open(title: String, pid: u32) -> Self {
+        let pid: u32 = window.pid;
         let handle: HANDLE = unsafe { OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid) };
         if handle == NULL {
             log::debug!("OpenProcess failed. Error: {:?}", std::io::Error::last_os_error());
-            let d2r_list = Self::get_d2r_instances();
+            log::error!("{} not found\nExiting rusty reveal...", window.title);
             let localisation = LOCALISATION.lock().unwrap();
-            let msg = format!("PID {} '{}' {}\n\n{}\n\n{}", pid, title, localisation.get_primemh("error12"), d2r_list, std::io::Error::last_os_error());
+            let msg = format!("D2R: '{}' PID: {} {}\n\n{}", window.title, window.pid, localisation.get_primemh("error12"), std::io::Error::last_os_error());
             panic!("{}", msg);
         }
         let base_address = Self::base_address(handle).unwrap();
         Self {
+            window: (*window).clone(),
             handle,
             base_address,
             offsets: Self::find_offsets(pid),
-            title,
-            pid
         }
     }
-
-    pub fn is_window_active(&self, overlay_hwnd: u64) -> bool {
-        let name: Vec<u16> = std::ffi::OsStr::new(&self.title)
-            .encode_wide()
-            .chain(std::iter::once(0))
-            .collect();
+    
+    pub fn is_window_active(&self, _overlay_hwnd: u64) -> bool {
+        let hwnd: HWND = self.window.hwnd;
         let mut is_active_window = false;
         unsafe {
-            let hwnd = FindWindowW(null(), name.as_ptr());
-            if GetForegroundWindow() == hwnd || GetForegroundWindow() == overlay_hwnd as HWND {
+            if GetForegroundWindow() == hwnd { // || GetForegroundWindow() == overlay_hwnd as HWND {
                 is_active_window = true;
             }
         }
         is_active_window
     }
 
+
     pub fn get_window_info(&self) -> D2RWindowArea {
-        let name: Vec<u16> = std::ffi::OsStr::new(&self.title)
-            .encode_wide()
-            .chain(std::iter::once(0))
-            .collect();
         let mut rect = RECT {
             left: 0,
             top: 0,
             right: 0,
             bottom: 0,
         };
+        let hwnd = self.window.hwnd;
         let mut position = POINT { x: 0, y: 0 };
-        let hwnd: *mut HWND__;
+        
         let scaling_factor: f64;
         unsafe {
-            hwnd = FindWindowW(null(), name.as_ptr());
             GetClientRect(hwnd, &mut rect);
             ClientToScreen(hwnd, &mut position);
             let dpi = GetDpiForWindow(hwnd);
@@ -129,6 +110,7 @@ impl D2RInstance {
             top: (rect.top as f64 / scaling_factor) as i32,
         }
     }
+    
 
     pub fn base_address(handle: HANDLE) -> Option<usize> {
         let mut maybe_hmod = MaybeUninit::<HMODULE>::uninit();
@@ -168,7 +150,6 @@ impl D2RInstance {
             None
         }
     }
-
     
     fn scan_pattern(pid: u32, pattern: String, extra_bytes: i32, extra_bytes2: i32) -> u32 {
         use proc_mem::{Process, Signature};
@@ -262,93 +243,9 @@ impl D2RInstance {
             if rpm_return == FALSE {
                 let caller = get_caller();
                 log::debug!("ReadProcessMemory read_mem_offset failed. Error: {:?}, ptr: {:?}, type: {}, caller: {}", std::io::Error::last_os_error(), &address, type_name::<T>(), caller);    
-                self.is_running();
             }
         }
         ret
-    }
-
-    pub fn is_running(&self) {
-        if Self::match_pid(self.pid.clone()).len() == 0 {
-            if self.base_address == 0 {
-                let d2r_list = Self::get_d2r_instances();
-                let localisation = LOCALISATION.lock().unwrap();
-                let msg = format!("{} '{}' {}\n\n{}", self.pid.clone(), self.title.clone(), localisation.get_primemh("error14"), d2r_list);
-                log::debug!("D2R no longer running {}", msg);
-                panic!("{}", msg);
-            }
-        }
-    }
-
-    pub fn tasklist() -> String {
-        let output = if cfg!(target_os = "windows") {
-            std::process::Command::new("tasklist")
-                .creation_flags(0x08000000)
-                .args(&["/fi", "IMAGENAME eq D2R.exe", "/v", "/FO", "CSV"])
-                .output()
-                .expect("failed to execute process")
-        } else {
-            std::process::Command::new("sh")
-                .arg("-c")
-                .arg("echo Todo!")
-                .output()
-                .expect("failed to execute process")
-        };
-        String::from_utf8_lossy(&output.stdout).to_string()
-    }
-
-    pub fn match_title(title: String) -> u32 {
-        let task_list: String = Self::tasklist();
-        let mut rdr = csv::Reader::from_reader(task_list.as_bytes());
-        for result in rdr.records() {
-            let record = match result {
-                Ok(it) => it,
-                Err(_) => todo!(),
-            };
-            if title == record[8] {
-                let pid = record[1].parse::<u32>().unwrap();
-                return pid;
-            }
-        }
-        0b0
-    }
-
-    pub fn match_pid(pid: u32) -> String {
-        let task_list: String = Self::tasklist();
-        let mut rdr = csv::Reader::from_reader(task_list.as_bytes());
-        for result in rdr.records() {
-            let record = match result {
-                Ok(it) => it,
-                Err(_) => todo!(),
-            };
-            if pid == record[1].parse::<u32>().unwrap() {
-                let title = record[8].parse::<String>().unwrap();
-                return title;
-            }
-        }
-        String::new()
-    }
-
-    pub fn get_d2r_instances() -> String {
-        let task_list: String = Self::tasklist();
-        let mut rdr = csv::Reader::from_reader(task_list.as_bytes());
-        let mut d2r_list: Vec<String> = vec![];
-        for result in rdr.records() {
-            let record = match result {
-                Ok(it) => it,
-                Err(_) => todo!(),
-            };
-            
-            let pid = record[1].parse::<u32>().unwrap();
-            let title = record[8].parse::<String>().unwrap();
-            d2r_list.push(format!("{}: '{}'", pid, title));
-            
-        }
-        if d2r_list.len() > 0 {
-            d2r_list.insert(0, String::from("D2R Instances currently running:"));
-            return d2r_list.join("\n");
-        }
-        return String::new()
     }
 
     pub fn read_mem<T: Default + Debug>(&self, address: u64) -> T {
@@ -370,7 +267,6 @@ impl D2RInstance {
             if rpm_return == FALSE {
                 let caller = get_caller();
                 log::debug!("ReadProcessMemory failed. Error: {:?}, ptr: {:?}, type: {}, caller: {}", std::io::Error::last_os_error(), &address, type_name::<T>(), caller);    
-                self.is_running();
             }
         }
         ret
