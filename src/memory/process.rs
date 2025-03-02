@@ -37,6 +37,7 @@ pub struct Offsets {
     pub hover: u64,
     pub roster: u64,
     pub panels: u64,
+    pub keybindings: u64,
 }
 
 #[allow(dead_code)]
@@ -215,6 +216,8 @@ impl D2RInstance {
         let pattern = String::from("48 89 05 ? ? ? ? 48 85 DB 74 1E");
         let panels = Self::scan_pattern(pid, pattern, 3, 7);
         log::debug!("Panel offset 0x{:02x}", panels);
+        
+        let keybindings = 0x1DFFAF0;
 
         Offsets {
             unit_table: unit_table as u64,
@@ -224,6 +227,7 @@ impl D2RInstance {
             hover: hover as u64,
             roster: roster as u64,
             panels: panels as u64,
+            keybindings: keybindings as u64,
         }
     }
 
