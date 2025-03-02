@@ -216,9 +216,11 @@ impl D2RInstance {
         let pattern = String::from("48 89 05 ? ? ? ? 48 85 DB 74 1E");
         let panels = Self::scan_pattern(pid, pattern, 3, 7);
         log::debug!("Panel offset 0x{:02x}", panels);
-        
-        let keybindings = 0x1DFFAF0;
 
+        let pattern = String::from("02 00 00 00 ? ? 00 00 00 00 03 00 00 00 ? ? 01 00 00 00");
+        let keybindings = Self::scan_pattern(pid, pattern, 0, 0x158C);
+        log::debug!("Keybindings offset 0x{:02x}", keybindings);
+        
         Offsets {
             unit_table: unit_table as u64,
             ui_offset: (ui_offset - 0xA) as u64,
