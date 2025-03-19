@@ -472,8 +472,23 @@ pub fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State) {
         );
         
         ui.label(splash_text.clone());
-        let title = format!("FPS {}", (app.timer.fps() * 100.0).round() / 100.0);
+        let title = format!("FPS {}", app.timer.fps().round());
         ui.label(title);
+
+        
+        if state.instance_locked {
+            if ui.add(egui::Button::image_and_text(egui::Image::new(state.locked_icon)
+                    .max_width(18.0)
+                    .tint(egui::Color32::WHITE), "Locked")).clicked() {
+                state.instance_locked = false;
+            }
+        } else {
+            if ui.add(egui::Button::image_and_text(egui::Image::new(state.unlocked_icon)
+                    .max_width(18.0)
+                    .tint(egui::Color32::WHITE), "Unlocked")).clicked() {
+                state.instance_locked = true;
+            }
+        }
 
         ui.separator();
         ui.horizontal(|ui| {

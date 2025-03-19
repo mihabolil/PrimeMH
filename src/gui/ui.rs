@@ -127,7 +127,6 @@ fn init(gfx: &mut Graphics) -> State {
         panic!("{}", localisation.get_primemh("error12"))
     }
     let d2rinstances: Vec<D2RInstance> = windows.iter().map(|window| D2RInstance::new(&window)).collect();
-    let buff_instances: Vec<BuffInstance> = d2rinstances.iter().map(|instance: &D2RInstance| BuffInstance::new(instance.window.clone())).collect();
 
     let exocet_font = gfx.create_font(include_bytes!("./fonts/exocet.otf")).expect("Could not load exocet font!");
     let formal_font = gfx.create_font(include_bytes!("./fonts/formal.otf")).expect("Could not load formal font!");
@@ -163,10 +162,25 @@ fn init(gfx: &mut Graphics) -> State {
             .unwrap();
 
     let language_icon = gfx.egui_register_texture(&texture);
+
+    let texture = gfx
+            .create_texture()
+            .from_image(include_bytes!("images/unlocked.png"))
+            .with_premultiplied_alpha()
+            .build()
+            .unwrap();
+    let unlocked_icon = gfx.egui_register_texture(&texture);
+
+    let texture = gfx
+            .create_texture()
+            .from_image(include_bytes!("images/locked.png"))
+            .with_premultiplied_alpha()
+            .build()
+            .unwrap();
+    let locked_icon = gfx.egui_register_texture(&texture);
     let last_map_opacity = settings.visual.map_opacity.clone();    
 
     State {
-        d2rprocess: None,
         d2rinstances,
         settings,
         seed_data,
@@ -189,15 +203,16 @@ fn init(gfx: &mut Graphics) -> State {
         map_overlay_toggle: false,
         language_selector_visible: false,
         language_icon,
+        unlocked_icon,
+        locked_icon,
         last_map_opacity,
         checked: false,
-        buff_instances: buff_instances,
+        instance_locked: false,
     }
 }
 
 #[derive(AppState)]
 pub(crate) struct State {
-    pub d2rprocess: Option<D2RInstance>,
     pub d2rinstances: Vec<D2RInstance>,
     pub settings: Settings,
     pub seed_data: SeedData,
@@ -217,16 +232,20 @@ pub(crate) struct State {
     pub map_overlay_toggle: bool,
     pub language_selector_visible: bool,
     pub language_icon: egui::SizedTexture,
+    pub unlocked_icon: egui::SizedTexture,
+    pub locked_icon: egui::SizedTexture,
     pub last_map_opacity: f32,
     pub checked: bool,
-    pub buff_instances: Vec<BuffInstance>,
+    pub instance_locked: bool,
 }
 
 fn update(app: &mut App, state: &mut State) {
-    state.d2rprocess = state.d2rinstances.iter().find(|instance| instance.is_window_active(app.window().id())).cloned();
+    
+
+    let d2rprocess = state.d2rinstances.iter_mut().find(|instance| instance.is_window_active(app.window().id()));
     
     
-    match &state.d2rprocess {
+    match d2rprocess {
         Some(d2rprocess) => {
             if d2rprocess.is_window_active(app.window().id()) {
                 let device_state: DeviceState = DeviceState::new();
@@ -260,8 +279,7 @@ fn update(app: &mut App, state: &mut State) {
             }
             
             if let Some(game_data) = GameData::read_game_memory(d2rprocess) {
-                let buff_instance: &mut BuffInstance = state.buff_instances.iter_mut().find(|instance| instance.window_info.hwnd == d2rprocess.window.hwnd).unwrap();
-                check_buff_timers(&game_data, &mut buff_instance.buff_timers);
+                check_buff_timers(&game_data, &mut d2rprocess.buff_instance.buff_timers);
                 // if new seed
                 if game_data.seed_values.map_seed != state.last_seed {
                     // generate new seed data using blachas' tool and parse the JSON into seed_data
@@ -332,8 +350,11 @@ fn update(app: &mut App, state: &mut State) {
 }
 
 fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut State) {
-    if state.d2rprocess.is_some() {
-        let d2rprocess = state.d2rprocess.clone().unwrap();
+
+    let d2rprocess = state.d2rinstances.iter_mut().find(|instance| instance.is_window_active(app.window().id()));
+
+
+    if let Some(d2rprocess) = d2rprocess {
         if d2rprocess.is_window_active(app.window().id()) || !state.settings.general.overlay_mode {
             let width: f32;
             let height: f32;
@@ -514,8 +535,7 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                                 );
 
                                 draw_item_tooltip(&mut draw, game_data, &state.settings, &state.fonts.exocet_font, &state.settings.visual.scale, state.relative_mouse_pos);
-                                let buff_instance: &mut BuffInstance = state.buff_instances.iter_mut().find(|instance| instance.window_info.hwnd == d2rprocess.window.hwnd).unwrap();
-                                draw_buff_bar(&mut draw, game_data, &state.settings, &state.fonts, &mut buff_instance.buff_animation_state, game_data.menus.skill_popover_visible, &buff_instance.buff_timers, &app.window().width(), &app.window().height(), &state.images);
+                                draw_buff_bar(&mut draw, game_data, &state.settings, &state.fonts, &mut d2rprocess.buff_instance, game_data.menus.skill_popover_visible, &app.window().width(), &app.window().height(), &state.images);
                                 draw_party_info(&mut draw, game_data, &state.fonts.formal_font, game_data.menus.party_portaits, &state.settings.party_info, &app.window().width(), &app.window().height());
 
                                 state.item_frame += 1;

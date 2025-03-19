@@ -14,6 +14,7 @@ use winapi::um::psapi::{EnumProcessModules, GetModuleBaseNameA};
 use winapi::um::winuser::{ClientToScreen, GetClientRect, GetDpiForWindow, GetForegroundWindow};
 use winapi::um::{processthreadsapi::OpenProcess, winnt::PROCESS_ALL_ACCESS};
 
+use crate::types::buffs::BuffInstance;
 use crate::LOCALISATION;
 
 use super::instance_manager::WindowInfo;
@@ -25,6 +26,7 @@ pub struct D2RInstance {
     pub handle: HANDLE,
     pub base_address: usize,
     pub offsets: Offsets,
+    pub buff_instance: BuffInstance,
 }
 
 #[allow(dead_code)]
@@ -71,6 +73,7 @@ impl D2RInstance {
             handle,
             base_address,
             offsets: Self::find_offsets(pid),
+            buff_instance: BuffInstance::new((*window).clone())
         }
     }
     
