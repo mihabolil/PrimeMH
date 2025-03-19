@@ -207,7 +207,8 @@ fn init(gfx: &mut Graphics) -> State {
         locked_icon,
         last_map_opacity,
         checked: false,
-        instance_locked: false,
+        instance_locked: None,
+        
     }
 }
 
@@ -236,18 +237,17 @@ pub(crate) struct State {
     pub locked_icon: egui::SizedTexture,
     pub last_map_opacity: f32,
     pub checked: bool,
-    pub instance_locked: bool,
+    pub instance_locked: Option<HWND>,
 }
 
 fn update(app: &mut App, state: &mut State) {
     
-
-    let d2rprocess = state.d2rinstances.iter_mut().find(|instance| instance.is_window_active(app.window().id()));
-    
+    let instance_locked = state.instance_locked.clone();
+    let d2rprocess = state.d2rinstances.iter_mut().find(|instance| instance.is_window_active(app.window().id(), instance_locked));
     
     match d2rprocess {
         Some(d2rprocess) => {
-            if d2rprocess.is_window_active(app.window().id()) {
+            if d2rprocess.is_window_active(app.window().id(), instance_locked) {
                 let device_state: DeviceState = DeviceState::new();
                 let keys: Vec<Keycode> = device_state.get_keys();
 
@@ -351,11 +351,12 @@ fn update(app: &mut App, state: &mut State) {
 
 fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut State) {
 
-    let d2rprocess = state.d2rinstances.iter_mut().find(|instance| instance.is_window_active(app.window().id()));
+    let instance_locked = state.instance_locked.clone();
+    let d2rprocess = state.d2rinstances.iter_mut().find(|instance| instance.is_window_active(app.window().id(), instance_locked));
 
 
     if let Some(d2rprocess) = d2rprocess {
-        if d2rprocess.is_window_active(app.window().id()) || !state.settings.general.overlay_mode {
+        if d2rprocess.is_window_active(app.window().id(), instance_locked) || !state.settings.general.overlay_mode {
             let width: f32;
             let height: f32;
             let mut mask = gfx.create_draw();
@@ -601,9 +602,10 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                     state.egui_rect = ctx.used_rect();
                 });
             } else {
+                let hwnd = d2rprocess.window.hwnd.clone();
                 output = plugins.egui(|ctx| {
                     if state.ui_panel_visible{
-                        create_egui_panel(app, ctx, state);
+                        create_egui_panel(app, ctx, state, hwnd);
                     }    
                     state.egui_rect = ctx.used_rect();
                 });

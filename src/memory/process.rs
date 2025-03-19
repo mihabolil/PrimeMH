@@ -77,12 +77,18 @@ impl D2RInstance {
         }
     }
     
-    pub fn is_window_active(&self, overlay_hwnd: u64) -> bool {
+    pub fn is_window_active(&self, overlay_hwnd: u64, d2r_hwnd: Option<HWND>) -> bool {
         let hwnd: HWND = self.window.hwnd;
         let mut is_active_window = false;
         unsafe {
-            if GetForegroundWindow() == hwnd || GetForegroundWindow() == overlay_hwnd as HWND {
-                is_active_window = true;
+            if d2r_hwnd.is_some() {
+                if GetForegroundWindow() == overlay_hwnd as HWND || GetForegroundWindow() == d2r_hwnd.unwrap() {
+                    is_active_window = true;
+                }
+            } else {
+                if GetForegroundWindow() == hwnd || GetForegroundWindow() == overlay_hwnd as HWND {
+                    is_active_window = true;
+                }
             }
         }
         is_active_window
