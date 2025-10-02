@@ -154,7 +154,7 @@ pub struct MonsterData {
 #[derivative(Default)]
 pub struct ObjectData {
     pub p_mon_stats: u64,
-    pub interact_type: u8,
+    pub interact_type: u8,  //interact type is also the area number of the portal
     pub shrine_flag: u8,
     _dummy: [u8; 2],
     pub shrine_txt: u64,

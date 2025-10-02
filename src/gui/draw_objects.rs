@@ -3,13 +3,15 @@ use std::collections::HashMap;
 use notan::draw::*;
 use notan::prelude::*;
 
+use crate::LOCALISATION;
+use crate::gui::Fonts;
 use crate::memory::gamedata::GameData;
 use crate::settings::Settings;
 use crate::types::object::GameObjectMode;
 use crate::types::object::GameObjectType;
 use crate::types::object::GameObjectUnit;
 
-pub fn draw_objects(draw: &mut Draw, game_data: &GameData, settings: &Settings, width: &f32, height: &f32, images: &HashMap<String, Texture>) {
+pub fn draw_objects(draw: &mut Draw, game_data: &GameData, settings: &Settings, width: &f32, height: &f32, images: &HashMap<String, Texture>, font: &Fonts) {
     let player_pos = (game_data.player.pos_x, game_data.player.pos_y);
 
     let chest_image = images.get("chest").unwrap();
@@ -17,7 +19,7 @@ pub fn draw_objects(draw: &mut Draw, game_data: &GameData, settings: &Settings, 
 
     game_data.objects.iter().for_each(|object| match object.object_type {
         GameObjectType::Chest => draw_chest(object, player_pos, draw, settings, chest_image, width, height),
-        GameObjectType::Portal => draw_portal(object, player_pos, draw, settings, width, height),
+        GameObjectType::Portal => draw_portal(object, player_pos, draw, settings, width, height, &font.formal_font, object.portal_destination),
         GameObjectType::RedPortal => draw_red_portal(object, player_pos, draw, settings, width, height),
         GameObjectType::SuperChest => draw_super_chest(object, player_pos, draw, settings, super_chest_image, width, height),
         GameObjectType::Shrine => (),
@@ -84,7 +86,7 @@ fn draw_super_chest(
 }
 
 
-fn draw_portal(portal: &GameObjectUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, width: &f32, height: &f32) {
+fn draw_portal(portal: &GameObjectUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, width: &f32, height: &f32, font: &Font, portal_area: Option<u8>) {
     if !settings.portals.enabled {
         return;
     }
@@ -92,9 +94,40 @@ fn draw_portal(portal: &GameObjectUnit, player_pos: (f32, f32), draw: &mut Draw,
     let unit_pos = (portal.pos_x, portal.pos_y);
     let portal_size = (settings.portals.size * scale, (settings.portals.size * 1.8) * scale);
     let portal_pos = transform_position(unit_pos, portal_size, player_pos, scale, width, height);
+    
     draw.ellipse(portal_pos, portal_size)
         .stroke(1.0 * scale)
         .color(Color::from_hex(0x00AAFFFF));
+
+    //draw portal text
+    if !settings.portals.show_area_name {
+        return;
+    }
+    let text = match portal_area {
+        Some(area) => {
+            let localisation = LOCALISATION.lock().unwrap();
+            localisation.get_level(&(area as u32))
+        },
+        None => String::new(),
+    };
+    let font_size = settings.portals.portal_font_size;
+    let text_y = portal_pos.1 - (portal_size.1 / 2.0) - (font_size * scale);
+    for (dx, dy) in [(-1.0, -1.0), (1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)] {
+        draw.text(font, &text)
+            .position(portal_pos.0 + dx, text_y + dy)
+            .size(font_size * scale)
+            .color(Color::BLACK)
+            .h_align_center()
+            .v_align_middle();
+    }
+    draw.text(font, &text)
+        .position(portal_pos.0, text_y)
+        .size(font_size * scale)
+        .color(Color::from_hex(0x8a9fd1FF))
+        .h_align_center()
+        .v_align_middle();
+
+    
 }
 
 fn draw_red_portal(portal: &GameObjectUnit, player_pos: (f32, f32), draw: &mut Draw, settings: &Settings, width: &f32, height: &f32) {

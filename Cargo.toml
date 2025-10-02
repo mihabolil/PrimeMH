@@ -1,6 +1,6 @@
 [package]
 name = "PrimeMH"
-version = "0.4.5"
+version = "0.4.6"
 edition = "2021"
 
 [profile.release]
@@ -19,7 +19,7 @@ sysinfo = { version = "0.26.4" }
 chrono = "0.4"
 
 num-traits = "0.2"
-num-derive = "0.3.3"
+num-derive = "0.4.2"
 derivative = "2.2.0"
 config = "0.13.1"
 rayon = "1.5"

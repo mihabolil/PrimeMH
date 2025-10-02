@@ -225,6 +225,10 @@ impl Default for Chests {
 pub struct Portals {
     pub enabled: bool,
     pub size: f32,
+    #[serde(default = "get_true")]
+    pub show_area_name: bool,
+    #[serde(default = "get_four")]
+    pub portal_font_size: f32,
 }
 
 impl Default for Portals {
@@ -232,6 +236,8 @@ impl Default for Portals {
         Portals {
             enabled: true,
             size: 2.0,
+            show_area_name: true,
+            portal_font_size: 4.0,
         }
     }
 }

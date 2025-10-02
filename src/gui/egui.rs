@@ -132,6 +132,14 @@ pub fn create_egui_panel(app: &mut App, ctx: &Context, state: &mut State, hwnd: 
                                 .range(0.1..=8.0)
                                 .speed(0.1),
                         );
+                        ui.label(localisation.get_primemh("show_portal_area_name"));
+                        ui.add(egui::Checkbox::new(&mut state.settings.portals.show_area_name, ""));
+                        ui.label(localisation.get_primemh("text_size"));
+                        ui.add(
+                            egui::DragValue::new(&mut state.settings.portals.portal_font_size)
+                                .range(1.0..=20.0)
+                                .speed(0.5),
+                        );
                         ui.end_row();
 
                         ui.label(localisation.get_primemh("show_shrines"));

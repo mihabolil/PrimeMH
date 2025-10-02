@@ -53,6 +53,8 @@ size = 0.1
 [portals]
 enabled = true
 size = 2.0
+show_area_name = true
+portal_font_size = 4.0
 
 [shrines]
 enabled = true

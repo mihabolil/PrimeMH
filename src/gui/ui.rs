@@ -529,7 +529,7 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                                     &height,
                                     &state.fonts,
                                 );
-                                draw_objects(&mut draw, game_data, &state.settings, &width, &height, &state.images);
+                                draw_objects(&mut draw, game_data, &state.settings, &width, &height, &state.images, &state.fonts);
                                 draw.mask(None);
 
                                 draw_item_log(
