@@ -79,7 +79,9 @@ pub fn is_blacha_ok(settings: &Settings) -> Result<bool, String> {
         Ok(_) => Ok(true),
         Err(_) => {
             let d2log_absolute_path = d2lodpath.to_str().unwrap();
-            let forbidden_folders: Vec<&str> = vec!["Desktop", "Dropbox", "Google Drive"];
+            log::debug!("Path used: {}", d2log_absolute_path);
+            let forbidden_folders: Vec<&str> = vec!["Desktop", "Dropbox", "Google Drive", "OneDrive"];
+            
             for folder in forbidden_folders {
                 if d2log_absolute_path.contains(folder) {
                     log::error!("{}\n{}", localisation.get_primemh("error1"), folder);
@@ -152,17 +154,22 @@ fn generate_data(seed_request: SeedRequest) -> String {
         format!("{{\"seed\":{},\"difficulty\":{},\"levels\":[", seed_request.map_seed, seed_request.difficulty);
     let mut seed_data = String::from(&start_of_seed_data);
     let stdout = String::from_utf8(output.stdout).unwrap();
+    let mut found = false;
     for line in stdout.lines() {
         if line.starts_with("{\"type\":\"map\"") {
             seed_data.push_str(line);
             seed_data.push(',');
+            found = true;
         }
     }
     seed_data.pop();
     seed_data.push_str("]}");
 
     // save to file
-    if seed_request.map_seed == 124 {
+    if seed_request.map_seed == 123 {
+        if !found {
+            log::error!("{}", stdout);
+        }
         return seed_data
     }
     let cached_seed_data_file = cache::cached_file_name(&seed_request.map_seed, &seed_request.difficulty);

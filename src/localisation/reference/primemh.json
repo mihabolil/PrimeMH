@@ -769,7 +769,7 @@
   },
   {
     "Key": "error2",
-    "enUS": "Error generating map data.\nCheck you have Visual C++ installed.\nRestart your PC.",
+    "enUS": "Error generating map data.\nCheck you have Visual C++ installed.\nRestart your PC.\nCheck the log file",
     "esES": "Error al generar datos del mapa.\nComprueba que tienes Visual C++ instalado.\nReinicie su PC.",
     "deDE": "Fehler beim Generieren der Kartendaten.\nÜberprüfen Sie, ob Visual C++ installiert ist.\nStarten Sie Ihren PC neu.",
     "zhTW": "產生地圖資料時發生錯誤。\n檢查您是否安裝了 Visual C++。\n重新啟動您的電腦。",

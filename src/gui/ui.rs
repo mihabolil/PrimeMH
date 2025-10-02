@@ -17,7 +17,7 @@ use winapi::um::winuser::{
 
 use crate::gui::draw_item_log::clear_item_log;
 use crate::memory::instance_manager::{get_process_pid_and_window_handle, WindowInfo};
-use crate::types::buffs::{check_buff_timers, BuffInstance};
+use crate::types::buffs::check_buff_timers;
 use crate::gui::draw_map::draw_map;
 use crate::gui::Fonts;
 use crate::mapgeneration::blacha::is_blacha_ok;
@@ -398,7 +398,7 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
             if elapsed_time >= Duration::from_secs(500) {
                 if !splash_text.contains("Joffreybesos") {
                     let local: DateTime<Local> = Local::now();
-                    let target_date = NaiveDate::from_ymd_opt(2025, 02, 3).unwrap();
+                    let target_date = NaiveDate::from_ymd_opt(2025, 10, 8).unwrap();
                     if local.date_naive() > target_date {
                         if !state.checked {
                             state.checked = true;
