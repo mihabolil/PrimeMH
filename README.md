@@ -42,7 +42,7 @@ https://rust-lang.org/tools/install/
 ### 2. Clone the code repository
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/joffreybesos/PrimeMH.git
 cd PrimeMH
 ```
 Or alternatively, download and extract the Zip from this repo.
